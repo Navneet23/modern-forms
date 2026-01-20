@@ -1,8 +1,8 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/form/:path*",
-      "destination": "https://docs.google.com/forms/:path*"
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 256,
+      "maxDuration": 10
     }
-  ]
+  }
 }
