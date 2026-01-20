@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/form/:path*",
+      "destination": "https://docs.google.com/forms/:path*"
+    }
+  ]
+}
