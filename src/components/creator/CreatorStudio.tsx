@@ -18,9 +18,8 @@ interface CreatorStudioProps {
 type PreviewMode = 'desktop' | 'mobile';
 
 export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
-  // Theme state for each layout
-  const [standardTheme, setStandardTheme] = useState<ThemeConfig>(defaultTheme);
-  const [qbyqTheme, setQbyqTheme] = useState<ThemeConfig>(defaultTheme);
+  // Single shared theme state across layouts
+  const [currentTheme, setCurrentTheme] = useState<ThemeConfig>(defaultTheme);
 
   // Current layout being edited
   const [activeLayout, setActiveLayout] = useState<LayoutMode>('standard');
@@ -32,10 +31,6 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
-
-  // Get current theme based on active layout
-  const currentTheme = activeLayout === 'standard' ? standardTheme : qbyqTheme;
-  const setCurrentTheme = activeLayout === 'standard' ? setStandardTheme : setQbyqTheme;
 
   // Handle theme selection
   const handleSelectTheme = useCallback((theme: ThemeConfig) => {
@@ -96,8 +91,7 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
     // Add theme data to config (we'll need to extend FormConfig type)
     const extendedConfig = {
       ...config,
-      standardTheme,
-      questionByQuestionTheme: qbyqTheme,
+      theme: currentTheme,
     };
 
     const id = saveFormConfig(extendedConfig as FormConfig);
@@ -107,7 +101,7 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 3000);
     });
-  }, [form, activeLayout, currentTheme, standardTheme, qbyqTheme]);
+  }, [form, activeLayout, currentTheme]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
@@ -252,47 +246,52 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
         {/* Main Preview Area */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Preview Toggle */}
-          <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => setPreviewMode('desktop')}
-              className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-                ${previewMode === 'desktop'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }
-              `}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Desktop
-            </button>
-            <button
-              onClick={() => setPreviewMode('mobile')}
-              className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-                ${previewMode === 'mobile'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }
-              `}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Mobile
-            </button>
+          <div className="bg-white border-b border-gray-200 px-4 py-2 flex flex-col items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPreviewMode('desktop')}
+                className={`
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+                  ${previewMode === 'desktop'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }
+                `}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Desktop
+              </button>
+              <button
+                onClick={() => setPreviewMode('mobile')}
+                className={`
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+                  ${previewMode === 'mobile'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }
+                `}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Mobile
+              </button>
+            </div>
+            <p className="text-xs text-yellow-700 bg-yellow-50 px-3 py-1 rounded-full">
+              Preview mode - responses will not be submitted
+            </p>
           </div>
 
           {/* Preview Frame */}
-          <div className="flex-1 overflow-auto p-6 flex items-start justify-center">
+          <div className={`flex-1 overflow-auto ${previewMode === 'mobile' ? 'p-6 flex items-start justify-center' : ''}`}>
             <div
               className={`
-                bg-white rounded-xl shadow-2xl overflow-hidden transition-all duration-300
+                bg-white overflow-hidden transition-all duration-300
                 ${previewMode === 'mobile'
-                  ? 'w-[375px] h-[700px]'
-                  : 'w-full max-w-4xl h-full'
+                  ? 'w-[375px] h-[700px] rounded-xl shadow-2xl'
+                  : 'w-full h-full'
                 }
               `}
               style={previewMode === 'mobile' ? {
