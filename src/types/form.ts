@@ -1,0 +1,69 @@
+export type QuestionType =
+  | 'short_answer'
+  | 'paragraph'
+  | 'multiple_choice'
+  | 'checkboxes'
+  | 'dropdown'
+  | 'linear_scale'
+  | 'multiple_choice_grid'
+  | 'checkbox_grid'
+  | 'date'
+  | 'time';
+
+export interface FormOption {
+  value: string;
+  label: string;
+}
+
+export interface ScaleLabels {
+  low?: string;
+  high?: string;
+}
+
+export interface GridQuestion {
+  rows: string[];
+  columns: string[];
+}
+
+export interface FormQuestion {
+  id: string;
+  entryId: string;
+  title: string;
+  description?: string;
+  type: QuestionType;
+  required: boolean;
+  options?: FormOption[];
+  scaleStart?: number;
+  scaleEnd?: number;
+  scaleLabels?: ScaleLabels;
+  grid?: GridQuestion;
+}
+
+export interface ParsedForm {
+  id: string;
+  title: string;
+  description?: string;
+  questions: FormQuestion[];
+  submitUrl: string;
+}
+
+export interface FormResponse {
+  [questionId: string]: string | string[];
+}
+
+export type LayoutMode = 'standard' | 'question-by-question';
+
+export interface FormConfig {
+  formId: string;
+  parsedForm: ParsedForm;
+  layoutMode: LayoutMode;
+  headerImageUrl?: string;
+  createdAt: number;
+  // Theme configurations for each layout
+  standardTheme?: unknown;
+  questionByQuestionTheme?: unknown;
+}
+
+export const isSingleSelectQuestion = (type: QuestionType): boolean => {
+  return ['multiple_choice', 'dropdown', 'linear_scale'].includes(type);
+};
