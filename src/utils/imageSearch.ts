@@ -3,6 +3,70 @@ import type { ThemeConfig } from '../types/theme';
 // Use Lorem Picsum for reliable free images
 // Categories map to specific image IDs that work well as headers
 
+// Curated gallery of background images that work well for forms
+export const BACKGROUND_GALLERY: number[] = [
+  29,   // Mountain landscape
+  16,   // Ocean/beach
+  274,  // City at night
+  281,  // Abstract colorful
+  10,   // Forest
+  15,   // River valley
+  100,  // Travel/scenic
+  164,  // Architecture
+  366,  // Abstract patterns
+  399,  // Geometric
+  431,  // Food/warm tones
+  452,  // Office/business
+];
+
+// Expanded background images by category for search
+const BACKGROUND_IMAGES: { [key: string]: number[] } = {
+  nature: [10, 11, 14, 15, 16, 17, 18, 19, 27, 28, 29, 54, 55, 56, 57, 58],
+  mountain: [14, 15, 29, 54, 58, 100, 167, 224, 256, 273],
+  ocean: [16, 17, 37, 47, 73, 141, 244, 256, 290, 292],
+  beach: [16, 17, 37, 47, 73, 141, 244, 256, 290, 292],
+  city: [164, 214, 215, 219, 242, 252, 257, 260, 274, 335],
+  urban: [164, 214, 215, 219, 242, 252, 257, 260, 274, 335],
+  abstract: [281, 303, 366, 399, 465, 468, 476, 501, 545, 552],
+  pattern: [281, 303, 366, 399, 465, 468, 476, 501, 545, 552],
+  forest: [10, 11, 14, 18, 19, 28, 38, 42, 44, 49],
+  sky: [120, 180, 223, 234, 265, 279, 302, 329, 337, 376],
+  sunset: [120, 142, 167, 223, 234, 265, 279, 329, 337, 376],
+  business: [380, 374, 395, 452, 453, 346, 338, 359, 367, 368],
+  office: [380, 374, 395, 452, 453, 346, 338, 359, 367, 368],
+  technology: [0, 1, 2, 60, 180, 201, 239, 267, 284, 326],
+  minimal: [195, 228, 238, 250, 255, 260, 301, 310, 313, 367],
+  architecture: [164, 214, 219, 257, 260, 311, 335, 338, 339, 348],
+};
+
+// Search for background images by keyword
+export function searchBackgroundImages(query: string): number[] {
+  const lowerQuery = query.toLowerCase().trim();
+
+  // Check for exact category match first
+  if (BACKGROUND_IMAGES[lowerQuery]) {
+    return BACKGROUND_IMAGES[lowerQuery];
+  }
+
+  // Check for partial matches
+  const matchedCategories: number[][] = [];
+  for (const [category, images] of Object.entries(BACKGROUND_IMAGES)) {
+    if (category.includes(lowerQuery) || lowerQuery.includes(category)) {
+      matchedCategories.push(images);
+    }
+  }
+
+  if (matchedCategories.length > 0) {
+    // Combine and deduplicate results
+    const combined = new Set<number>();
+    matchedCategories.forEach(images => images.forEach(id => combined.add(id)));
+    return Array.from(combined).slice(0, 12);
+  }
+
+  // Fallback to a mix from different categories
+  return BACKGROUND_GALLERY;
+}
+
 const HEADER_IMAGES: { [key: string]: number[] } = {
   business: [380, 374, 395, 452, 453],
   technology: [0, 1, 2, 60, 180],

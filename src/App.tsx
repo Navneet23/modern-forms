@@ -21,6 +21,23 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const formId = params.get('f');
 
+    // Allow ?reset to clear all saved forms and start fresh
+    if (params.has('reset')) {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('modern-forms-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
+    // Allow ?new to force fresh start
+    if (params.has('new')) {
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
     if (formId) {
       const config = getFormConfig(formId);
       if (config) {
