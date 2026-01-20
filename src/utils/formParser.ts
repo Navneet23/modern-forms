@@ -11,7 +11,8 @@ export async function fetchGoogleForm(formUrl: string): Promise<string> {
   }
 
   // Fetch via proxy to avoid CORS
-  const response = await fetch(`/api/form/d/e/${formId}/viewform`);
+  const googleFormPath = `d/e/${formId}/viewform`;
+  const response = await fetch(`/api/proxy?url=${encodeURIComponent(googleFormPath)}`);
   if (!response.ok) {
     throw new Error('Failed to fetch form');
   }
@@ -187,8 +188,9 @@ export async function submitFormResponse(
   });
 
   try {
-    // Submit via proxy
-    const proxyUrl = submitUrl.replace('https://docs.google.com/forms', '/api/form');
+    // Submit via proxy - extract the path from the full Google Forms URL
+    const formPath = submitUrl.replace('https://docs.google.com/forms/', '');
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(formPath)}`;
     await fetch(proxyUrl, {
       method: 'POST',
       body: formData,
