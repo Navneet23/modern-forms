@@ -27,6 +27,7 @@ export function StandardLayout({
 
   // Use theme header image if available
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
+  const hasBackgroundImage = !!theme.backgroundImageUrl;
 
   const handleChange = (questionId: string, value: string | string[]) => {
     setResponses((prev) => ({ ...prev, [questionId]: value }));
@@ -92,14 +93,33 @@ export function StandardLayout({
     }
   };
 
+  // Use absolute positioning in preview mode to stay within container
+  const positionClass = isPreview ? 'absolute' : 'fixed';
+
+  // Background layers component - raw image, no overlay or blur
+  const BackgroundLayers = () => {
+    if (!hasBackgroundImage) return null;
+
+    return (
+      <div
+        className={`${positionClass} inset-0 bg-cover bg-center bg-no-repeat`}
+        style={{
+          backgroundImage: `url(${theme.backgroundImageUrl})`,
+        }}
+        aria-hidden="true"
+      />
+    );
+  };
+
   if (submitStatus === 'success') {
     return (
       <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{ backgroundColor: theme.colors.background }}
+        className="min-h-screen flex items-center justify-center p-4 relative"
+        style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
       >
+        <BackgroundLayers />
         <div
-          className="max-w-lg w-full rounded-2xl shadow-lg p-8 text-center"
+          className="max-w-lg w-full rounded-2xl shadow-lg p-8 text-center relative z-10"
           style={{ backgroundColor: theme.colors.surface }}
         >
           <div
@@ -128,22 +148,29 @@ export function StandardLayout({
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative"
       style={{
-        backgroundColor: theme.colors.background,
-        backgroundImage: theme.backgroundImageUrl
-          ? `linear-gradient(to bottom, ${theme.colors.background}ee, ${theme.colors.background}), url(${theme.backgroundImageUrl})`
-          : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background,
       }}
     >
+      {/* Background layers (image + overlay) */}
+      <BackgroundLayers />
+
+      {/* Fallback solid background when no image */}
+      {!hasBackgroundImage && (
+        <div
+          className={`${positionClass} inset-0`}
+          style={{ backgroundColor: theme.colors.background }}
+          aria-hidden="true"
+        />
+      )}
+
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 
-      <main id="main-content" className="max-w-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      {/* Content layer */}
+      <main id="main-content" className="max-w-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <header className="mb-8">
           {displayHeaderImage && (

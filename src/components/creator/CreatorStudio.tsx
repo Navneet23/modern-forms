@@ -4,6 +4,7 @@ import type { ThemeConfig, ThemeColors } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
+import { BackgroundImagePicker } from './BackgroundImagePicker';
 import { generateThemeFromForm } from '../../utils/imageSearch';
 import { saveFormConfig } from '../../utils/storage';
 import { StandardLayout } from '../layouts/StandardLayout';
@@ -51,6 +52,15 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
         ...prev.colors,
         [colorKey]: value,
       },
+    }));
+  }, [setCurrentTheme]);
+
+  // Handle background image change
+  const handleBackgroundImageChange = useCallback((url: string | undefined) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      backgroundImageUrl: url,
     }));
   }, [setCurrentTheme]);
 
@@ -224,6 +234,12 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
                 </p>
               )}
             </div>
+
+            {/* Background Image Picker */}
+            <BackgroundImagePicker
+              currentImageUrl={currentTheme.backgroundImageUrl}
+              onImageSelect={handleBackgroundImageChange}
+            />
 
             {/* Color Customizer */}
             <ColorCustomizer

@@ -35,10 +35,29 @@ export function QuestionByQuestionLayout({
 
   // Use theme header image if available
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
+  const hasBackgroundImage = !!theme.backgroundImageUrl;
 
   const currentQuestion = form.questions[currentIndex];
   const totalQuestions = form.questions.length;
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
+
+  // Use absolute positioning in preview mode to stay within container
+  const positionClass = isPreview ? 'absolute' : 'fixed';
+
+  // Background layers component - raw image, no overlay or blur
+  const BackgroundLayers = () => {
+    if (!hasBackgroundImage) return null;
+
+    return (
+      <div
+        className={`${positionClass} inset-0 bg-cover bg-center bg-no-repeat`}
+        style={{
+          backgroundImage: `url(${theme.backgroundImageUrl})`,
+        }}
+        aria-hidden="true"
+      />
+    );
+  };
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -195,17 +214,12 @@ export function QuestionByQuestionLayout({
   if (viewState === 'welcome') {
     return (
       <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{
-          backgroundColor: theme.colors.background,
-          backgroundImage: theme.backgroundImageUrl
-            ? `linear-gradient(to bottom right, ${theme.colors.background}ee, ${theme.colors.background}), url(${theme.backgroundImageUrl})`
-            : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="min-h-screen flex items-center justify-center p-4 relative"
+        style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
       >
-        <div className="max-w-lg w-full">
+        <BackgroundLayers />
+
+        <div className="max-w-lg w-full relative z-10">
           {displayHeaderImage && (
             <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
               <img src={displayHeaderImage} alt="" className="w-full h-48 object-cover" aria-hidden="true" />
@@ -257,18 +271,13 @@ export function QuestionByQuestionLayout({
   if (viewState === 'success') {
     return (
       <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{
-          backgroundColor: theme.colors.background,
-          backgroundImage: theme.backgroundImageUrl
-            ? `linear-gradient(to bottom right, ${theme.colors.background}ee, ${theme.colors.background}), url(${theme.backgroundImageUrl})`
-            : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="min-h-screen flex items-center justify-center p-4 relative"
+        style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
       >
+        <BackgroundLayers />
+
         <div
-          className="max-w-lg w-full rounded-2xl shadow-lg p-8 text-center"
+          className="max-w-lg w-full rounded-2xl shadow-lg p-8 text-center relative z-10"
           style={{ backgroundColor: theme.colors.surface }}
         >
           <div
@@ -297,17 +306,12 @@ export function QuestionByQuestionLayout({
   if (viewState === 'review') {
     return (
       <div
-        className="min-h-screen py-8 px-4"
-        style={{
-          backgroundColor: theme.colors.background,
-          backgroundImage: theme.backgroundImageUrl
-            ? `linear-gradient(to bottom right, ${theme.colors.background}ee, ${theme.colors.background}), url(${theme.backgroundImageUrl})`
-            : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="min-h-screen py-8 px-4 relative"
+        style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
       >
-        <div className="max-w-2xl mx-auto">
+        <BackgroundLayers />
+
+        <div className="max-w-2xl mx-auto relative z-10">
           <div
             className="rounded-2xl shadow-lg p-6 sm:p-8"
             style={{ backgroundColor: theme.colors.surface }}
@@ -393,23 +397,18 @@ export function QuestionByQuestionLayout({
   // Questions Screen
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{
-        backgroundColor: theme.colors.background,
-        backgroundImage: theme.backgroundImageUrl
-          ? `linear-gradient(to bottom right, ${theme.colors.background}ee, ${theme.colors.background}), url(${theme.backgroundImageUrl})`
-          : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      className="min-h-screen flex flex-col relative"
+      style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
     >
+      <BackgroundLayers />
+
       <a href="#question-content" className="skip-link">
         Skip to question
       </a>
 
       {/* Progress Bar */}
       <div
-        className="fixed top-0 left-0 right-0 z-10 shadow-sm"
+        className={`${positionClass} top-0 left-0 right-0 z-20 shadow-sm`}
         style={{ backgroundColor: theme.colors.surface }}
       >
         <div className="h-1" style={{ backgroundColor: theme.colors.border }}>
@@ -431,7 +430,7 @@ export function QuestionByQuestionLayout({
       {/* Question Content */}
       <main
         id="question-content"
-        className="flex-1 flex items-center justify-center px-4 pt-20 pb-24"
+        className="flex-1 flex items-center justify-center px-4 pt-20 pb-24 relative z-10"
       >
         <div
           ref={questionRef}
@@ -468,7 +467,7 @@ export function QuestionByQuestionLayout({
 
       {/* Navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 border-t shadow-lg"
+        className={`${positionClass} bottom-0 left-0 right-0 border-t shadow-lg z-20`}
         style={{
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,

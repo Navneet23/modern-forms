@@ -181,6 +181,83 @@ export const presetThemes: ThemeConfig[] = [
     borderRadius: 'xl',
     fontFamily: "'Inter', system-ui, sans-serif",
   },
+  // Themes with background images
+  {
+    id: 'mountain-vista',
+    name: 'Mountain Vista',
+    description: 'Majestic mountains with alpine colors',
+    colors: {
+      primary: '#1d4ed8',
+      secondary: '#60a5fa',
+      background: '#1e3a5f',
+      surface: '#ffffff',
+      text: '#1e293b',
+      textSecondary: '#64748b',
+      border: '#e2e8f0',
+      error: '#ef4444',
+      success: '#22c55e',
+    },
+    borderRadius: 'lg',
+    fontFamily: "'Inter', system-ui, sans-serif",
+    backgroundImageUrl: 'https://picsum.photos/id/29/1920/1080', // Mountain landscape
+  },
+  {
+    id: 'city-lights',
+    name: 'City Lights',
+    description: 'Urban nightscape with neon accents',
+    colors: {
+      primary: '#f472b6',
+      secondary: '#c084fc',
+      background: '#0f0f23',
+      surface: '#1a1a2e',
+      text: '#f1f5f9',
+      textSecondary: '#94a3b8',
+      border: '#334155',
+      error: '#f87171',
+      success: '#4ade80',
+    },
+    borderRadius: 'lg',
+    fontFamily: "'Inter', system-ui, sans-serif",
+    backgroundImageUrl: 'https://picsum.photos/id/274/1920/1080', // City at night
+  },
+  {
+    id: 'ocean-waves',
+    name: 'Ocean Waves',
+    description: 'Serene beach with coastal vibes',
+    colors: {
+      primary: '#0891b2',
+      secondary: '#22d3ee',
+      background: '#164e63',
+      surface: '#ffffff',
+      text: '#134e4a',
+      textSecondary: '#5eead4',
+      border: '#99f6e4',
+      error: '#ef4444',
+      success: '#22c55e',
+    },
+    borderRadius: 'xl',
+    fontFamily: "'Inter', system-ui, sans-serif",
+    backgroundImageUrl: 'https://picsum.photos/id/16/1920/1080', // Ocean/beach
+  },
+  {
+    id: 'abstract-flow',
+    name: 'Abstract Flow',
+    description: 'Colorful abstract patterns',
+    colors: {
+      primary: '#8b5cf6',
+      secondary: '#ec4899',
+      background: '#2e1065',
+      surface: '#ffffff',
+      text: '#1e293b',
+      textSecondary: '#64748b',
+      border: '#e2e8f0',
+      error: '#ef4444',
+      success: '#22c55e',
+    },
+    borderRadius: 'xl',
+    fontFamily: "'Poppins', system-ui, sans-serif",
+    backgroundImageUrl: 'https://picsum.photos/id/281/1920/1080', // Abstract
+  },
 ];
 
 export const defaultTheme = presetThemes[0]; // Clean Slate
