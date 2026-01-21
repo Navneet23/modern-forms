@@ -1,5 +1,3 @@
-import type { ThemeConfig } from '../types/theme';
-
 // Use Lorem Picsum for reliable free images
 // Categories map to specific image IDs that work well as headers
 
@@ -176,82 +174,6 @@ export function getRandomImageFromCategory(category: string, width: number, heig
   const imageIds = HEADER_IMAGES[category] || HEADER_IMAGES.default;
   const randomId = imageIds[Math.floor(Math.random() * imageIds.length)];
   return getPicsumUrl(randomId, width, height);
-}
-
-// Predefined color palettes that work well together
-const COLOR_PALETTES = [
-  { primary: '#4F46E5', secondary: '#7C3AED', bg: '#F8FAFC', surface: '#FFFFFF', text: '#1E293B', textSec: '#64748B' },
-  { primary: '#0EA5E9', secondary: '#06B6D4', bg: '#F0F9FF', surface: '#FFFFFF', text: '#0C4A6E', textSec: '#64748B' },
-  { primary: '#10B981', secondary: '#059669', bg: '#ECFDF5', surface: '#FFFFFF', text: '#064E3B', textSec: '#6B7280' },
-  { primary: '#F59E0B', secondary: '#D97706', bg: '#FFFBEB', surface: '#FFFFFF', text: '#78350F', textSec: '#92400E' },
-  { primary: '#EF4444', secondary: '#DC2626', bg: '#FEF2F2', surface: '#FFFFFF', text: '#7F1D1D', textSec: '#991B1B' },
-  { primary: '#8B5CF6', secondary: '#A855F7', bg: '#FAF5FF', surface: '#FFFFFF', text: '#4C1D95', textSec: '#6B21A8' },
-  { primary: '#EC4899', secondary: '#DB2777', bg: '#FDF2F8', surface: '#FFFFFF', text: '#831843', textSec: '#9D174D' },
-  { primary: '#14B8A6', secondary: '#0D9488', bg: '#F0FDFA', surface: '#FFFFFF', text: '#134E4A', textSec: '#115E59' },
-  // Dark themes
-  { primary: '#818CF8', secondary: '#A78BFA', bg: '#1E1B4B', surface: '#312E81', text: '#E0E7FF', textSec: '#A5B4FC' },
-  { primary: '#22D3EE', secondary: '#67E8F9', bg: '#164E63', surface: '#155E75', text: '#ECFEFF', textSec: '#A5F3FC' },
-];
-
-// Get a color palette based on category
-function getColorPaletteForCategory(category: string): typeof COLOR_PALETTES[0] {
-  const categoryPaletteMap: { [key: string]: number } = {
-    business: 0,
-    technology: 1,
-    education: 5,
-    creative: 6,
-    health: 2,
-    food: 3,
-    travel: 7,
-    nature: 2,
-    abstract: 8,
-    default: 0,
-  };
-
-  const paletteIndex = categoryPaletteMap[category] ?? 0;
-  return COLOR_PALETTES[paletteIndex];
-}
-
-// Main function to generate a theme from form content
-export async function generateThemeFromForm(
-  title: string,
-  description?: string
-): Promise<{ theme: ThemeConfig; error?: string }> {
-  const keywords = extractKeywords(title, description);
-  const category = determineCategory(keywords);
-
-  // Get image URLs from Lorem Picsum
-  const headerImageUrl = getRandomImageFromCategory(category, 1200, 400);
-  const backgroundImageUrl = getRandomImageFromCategory('abstract', 1920, 1080);
-
-  // Get color palette for category
-  const palette = getColorPaletteForCategory(category);
-
-  return {
-    theme: {
-      id: 'generated',
-      name: 'Generated Theme',
-      description: `Theme generated for: ${title}`,
-      colors: {
-        primary: palette.primary,
-        secondary: palette.secondary,
-        background: palette.bg,
-        surface: palette.surface,
-        text: palette.text,
-        textSecondary: palette.textSec,
-        border: palette.textSec + '40',
-        error: '#EF4444',
-        success: '#22C55E',
-      },
-      borderRadius: 'lg',
-      fontFamily: "'Inter', system-ui, sans-serif",
-      headerImageUrl,
-      backgroundImageUrl,
-    },
-    error: keywords.length === 0
-      ? 'No relevant keywords found. Using default images and colors.'
-      : undefined,
-  };
 }
 
 // Legacy exports for compatibility
