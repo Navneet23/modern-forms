@@ -10,6 +10,8 @@ export interface ThemeColors {
   success: string;
 }
 
+export type BackgroundEffect = 'solid' | 'textured' | 'shapes' | 'gradient';
+
 export interface ThemeConfig {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ export interface ThemeConfig {
   fontFamily: string;
   headerImageUrl?: string;
   backgroundImageUrl?: string;
+  backgroundEffect?: BackgroundEffect;
 }
 
 export const borderRadiusValues = {
