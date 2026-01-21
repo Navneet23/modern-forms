@@ -233,6 +233,9 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
             <BackgroundImagePicker
               currentImageUrl={currentTheme.backgroundImageUrl}
               onImageSelect={handleBackgroundImageChange}
+              formTitle={form.title}
+              formDescription={form.description}
+              themeColors={currentTheme.colors}
             />
 
             {/* Color Customizer */}

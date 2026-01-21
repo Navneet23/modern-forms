@@ -1,16 +1,53 @@
 import { useState, useCallback } from 'react';
 import { BACKGROUND_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
+import { generateBackgroundImage } from '../../utils/aiImageGeneration';
+import type { ThemeColors } from '../../types/theme';
 
 interface BackgroundImagePickerProps {
   currentImageUrl?: string;
   onImageSelect: (url: string | undefined) => void;
+  formTitle: string;
+  formDescription?: string;
+  themeColors: ThemeColors;
 }
 
 type TabType = 'browse' | 'upload';
 
-export function BackgroundImagePicker({ currentImageUrl, onImageSelect }: BackgroundImagePickerProps) {
+export function BackgroundImagePicker({
+  currentImageUrl,
+  onImageSelect,
+  formTitle,
+  formDescription,
+  themeColors,
+}: BackgroundImagePickerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('browse');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Handle AI image generation
+  const handleGenerateWithAI = useCallback(async () => {
+    setIsGeneratingAI(true);
+    setAiError(null);
+
+    try {
+      const { imageUrl, error } = await generateBackgroundImage(
+        formTitle,
+        formDescription,
+        themeColors
+      );
+
+      if (error) {
+        setAiError(error);
+      } else if (imageUrl) {
+        onImageSelect(imageUrl);
+      }
+    } catch (err) {
+      setAiError('Failed to generate image. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  }, [formTitle, formDescription, themeColors, onImageSelect]);
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +115,44 @@ export function BackgroundImagePicker({ currentImageUrl, onImageSelect }: Backgr
             </span>
           </div>
         </div>
+      )}
+
+      {/* Generate with AI Button */}
+      <button
+        onClick={handleGenerateWithAI}
+        disabled={isGeneratingAI}
+        className={`
+          w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all
+          flex items-center justify-center gap-2
+          ${isGeneratingAI
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+          }
+        `}
+      >
+        {isGeneratingAI ? (
+          <>
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Generating...
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            Generate with AI
+          </>
+        )}
+      </button>
+
+      {/* AI Error Message */}
+      {aiError && (
+        <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+          {aiError}
+        </p>
       )}
 
       {/* Tabs */}
