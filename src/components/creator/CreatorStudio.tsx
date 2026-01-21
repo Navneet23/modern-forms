@@ -152,7 +152,7 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-72 bg-white border-r border-gray-200 flex flex-col overflow-hidden flex-shrink-0">
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 pb-16 space-y-6">
             {/* Layout Toggle */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700">Layout</h3>
