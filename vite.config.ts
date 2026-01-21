@@ -10,8 +10,8 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => {
           // Extract the url parameter and convert to Google Forms path
-          const url = new URL(path, 'http://localhost');
-          const formPath = url.searchParams.get('url') || '';
+          const match = path.match(/[?&]url=([^&]*)/);
+          const formPath = match ? decodeURIComponent(match[1]) : '';
           return `/forms/${formPath}`;
         },
       },
