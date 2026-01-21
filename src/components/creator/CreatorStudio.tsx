@@ -197,6 +197,8 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
               selectedEffect={currentTheme.backgroundEffect || 'solid'}
               onEffectChange={handleBackgroundEffectChange}
               backgroundColor={currentTheme.colors.background}
+              primaryColor={currentTheme.colors.primary}
+              secondaryColor={currentTheme.colors.secondary}
               disabled={!!currentTheme.backgroundImageUrl}
             />
           </div>

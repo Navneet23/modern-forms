@@ -4,6 +4,8 @@ interface BackgroundEffectPickerProps {
   selectedEffect: BackgroundEffect;
   onEffectChange: (effect: BackgroundEffect) => void;
   backgroundColor: string;
+  primaryColor: string;
+  secondaryColor: string;
   disabled: boolean;
 }
 
@@ -65,15 +67,17 @@ function adjustBrightness(hexColor: string, percent: number): string {
 interface EffectPreviewProps {
   effect: BackgroundEffect;
   backgroundColor: string;
+  primaryColor: string;
+  secondaryColor: string;
   isSelected: boolean;
   onClick: () => void;
   disabled: boolean;
 }
 
-function EffectPreview({ effect, backgroundColor, isSelected, onClick, disabled }: EffectPreviewProps) {
-  const complementary = getComplementaryColor(backgroundColor, 40);
-  const lighter = adjustBrightness(backgroundColor, 30);
-  const darker = adjustBrightness(backgroundColor, -20);
+function EffectPreview({ effect, backgroundColor, primaryColor, secondaryColor, isSelected, onClick, disabled }: EffectPreviewProps) {
+  // Use lighter versions of primary/secondary for shapes and gradient
+  const primaryLight = adjustBrightness(primaryColor, 60);
+  const secondaryLight = adjustBrightness(secondaryColor, 40);
 
   const getPreviewStyle = (): React.CSSProperties => {
     switch (effect) {
@@ -89,7 +93,7 @@ function EffectPreview({ effect, backgroundColor, isSelected, onClick, disabled 
         return { backgroundColor };
       case 'gradient':
         return {
-          background: `linear-gradient(135deg, ${backgroundColor} 0%, ${complementary} 100%)`,
+          background: `linear-gradient(135deg, ${primaryLight} 0%, ${secondaryLight} 100%)`,
         };
       default:
         return { backgroundColor };
@@ -120,9 +124,9 @@ function EffectPreview({ effect, backgroundColor, isSelected, onClick, disabled 
         {/* Shapes overlay for preview */}
         {effect === 'shapes' && (
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-            <circle cx="20" cy="50" r="35" fill={lighter} opacity="0.6" />
-            <circle cx="50" cy="60" r="30" fill={complementary} opacity="0.4" />
-            <circle cx="80" cy="40" r="40" fill={darker} opacity="0.5" />
+            <circle cx="20" cy="50" r="35" fill={primaryLight} opacity="0.6" />
+            <circle cx="50" cy="60" r="30" fill={secondaryLight} opacity="0.5" />
+            <circle cx="80" cy="40" r="40" fill={primaryColor} opacity="0.3" />
           </svg>
         )}
         {/* Texture overlay for preview */}
@@ -146,6 +150,8 @@ export function BackgroundEffectPicker({
   selectedEffect,
   onEffectChange,
   backgroundColor,
+  primaryColor,
+  secondaryColor,
   disabled,
 }: BackgroundEffectPickerProps) {
   const effects: BackgroundEffect[] = ['solid', 'textured', 'shapes', 'gradient'];
@@ -166,6 +172,8 @@ export function BackgroundEffectPicker({
             key={effect}
             effect={effect}
             backgroundColor={backgroundColor}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
             isSelected={selectedEffect === effect}
             onClick={() => !disabled && onEffectChange(effect)}
             disabled={disabled}

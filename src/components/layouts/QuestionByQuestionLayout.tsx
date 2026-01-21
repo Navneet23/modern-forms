@@ -64,6 +64,8 @@ export function QuestionByQuestionLayout({
       <BackgroundEffectRenderer
         effect={theme.backgroundEffect || 'solid'}
         backgroundColor={theme.colors.background}
+        primaryColor={theme.colors.primary}
+        secondaryColor={theme.colors.secondary}
         positionClass={positionClass}
       />
     );
