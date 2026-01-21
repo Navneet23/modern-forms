@@ -59,9 +59,8 @@ export interface FormConfig {
   layoutMode: LayoutMode;
   headerImageUrl?: string;
   createdAt: number;
-  // Theme configurations for each layout
-  standardTheme?: unknown;
-  questionByQuestionTheme?: unknown;
+  // Theme configuration (shared across layouts)
+  theme?: unknown;
 }
 
 export const isSingleSelectQuestion = (type: QuestionType): boolean => {

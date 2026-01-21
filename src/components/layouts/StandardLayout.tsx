@@ -202,13 +202,6 @@ export function StandardLayout({
                 {form.description}
               </p>
             )}
-            {isPreview && (
-              <div className="mt-4 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  Preview Mode - Responses will not be submitted
-                </p>
-              </div>
-            )}
           </div>
         </header>
 

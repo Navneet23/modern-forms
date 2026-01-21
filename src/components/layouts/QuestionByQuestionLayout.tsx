@@ -248,12 +248,6 @@ export function QuestionByQuestionLayout({
               {totalQuestions} questions
             </p>
 
-            {isPreview && (
-              <div className="mb-6 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">Preview Mode</p>
-              </div>
-            )}
-
             <button
               onClick={() => setViewState('questions')}
               className="px-8 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"

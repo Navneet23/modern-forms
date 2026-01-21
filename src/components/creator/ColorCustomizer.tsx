@@ -38,8 +38,8 @@ function ColorSwatch({ label, color, onChange }: ColorSwatchProps) {
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Color picker popover */}
-          <div className="absolute left-0 top-full mt-1 z-20 bg-white rounded-lg shadow-xl border border-gray-200 p-3">
+          {/* Color picker popover - opens upward for better visibility */}
+          <div className="absolute left-0 bottom-full mb-1 z-20 bg-white rounded-lg shadow-xl border border-gray-200 p-3">
             <HexColorPicker color={color} onChange={onChange} />
             <input
               type="text"

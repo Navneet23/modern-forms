@@ -89,20 +89,18 @@ function App() {
   // Respondent view - render the form with saved theme
   if (view === 'respond' && formConfig && parsedForm) {
     // Get theme from saved config or use default
-    const standardTheme = (formConfig.standardTheme as ThemeConfig) || defaultTheme;
-    const qbyqTheme = (formConfig.questionByQuestionTheme as ThemeConfig) || defaultTheme;
-    const currentTheme = formConfig.layoutMode === 'standard' ? standardTheme : qbyqTheme;
+    const savedTheme = (formConfig.theme as ThemeConfig) || defaultTheme;
 
     return formConfig.layoutMode === 'standard' ? (
       <StandardLayout
         form={parsedForm}
-        theme={currentTheme}
+        theme={savedTheme}
         headerImageUrl={formConfig.headerImageUrl}
       />
     ) : (
       <QuestionByQuestionLayout
         form={parsedForm}
-        theme={currentTheme}
+        theme={savedTheme}
         headerImageUrl={formConfig.headerImageUrl}
       />
     );
