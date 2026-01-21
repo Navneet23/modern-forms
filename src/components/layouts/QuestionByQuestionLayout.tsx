@@ -5,6 +5,7 @@ import { isSingleSelectQuestion } from '../../types/form';
 import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
 import { submitFormResponse } from '../../utils/formParser';
+import { BackgroundEffectRenderer } from '../common/BackgroundEffectRenderer';
 
 interface QuestionByQuestionLayoutProps {
   form: ParsedForm;
@@ -44,17 +45,26 @@ export function QuestionByQuestionLayout({
   // Use absolute positioning in preview mode to stay within container
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
-  // Background layers component - raw image, no overlay or blur
+  // Background layers component - handles both image and effect backgrounds
   const BackgroundLayers = () => {
-    if (!hasBackgroundImage) return null;
+    if (hasBackgroundImage) {
+      return (
+        <div
+          className={`${positionClass} inset-0 bg-cover bg-center bg-no-repeat`}
+          style={{
+            backgroundImage: `url(${theme.backgroundImageUrl})`,
+          }}
+          aria-hidden="true"
+        />
+      );
+    }
 
+    // Render background effect when no image is selected
     return (
-      <div
-        className={`${positionClass} inset-0 bg-cover bg-center bg-no-repeat`}
-        style={{
-          backgroundImage: `url(${theme.backgroundImageUrl})`,
-        }}
-        aria-hidden="true"
+      <BackgroundEffectRenderer
+        effect={theme.backgroundEffect || 'solid'}
+        backgroundColor={theme.colors.background}
+        positionClass={positionClass}
       />
     );
   };

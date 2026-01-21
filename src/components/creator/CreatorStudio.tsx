@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
 import type { ParsedForm, LayoutMode, FormConfig } from '../../types/form';
-import type { ThemeConfig, ThemeColors } from '../../types/theme';
+import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
 import { BackgroundImagePicker } from './BackgroundImagePicker';
+import { BackgroundEffectPicker } from './BackgroundEffectPicker';
 import { saveFormConfig } from '../../utils/storage';
 import { StandardLayout } from '../layouts/StandardLayout';
 import { QuestionByQuestionLayout } from '../layouts/QuestionByQuestionLayout';
@@ -52,6 +53,15 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
       ...prev,
       id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
       backgroundImageUrl: url,
+    }));
+  }, [setCurrentTheme]);
+
+  // Handle background effect change
+  const handleBackgroundEffectChange = useCallback((effect: BackgroundEffect) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      backgroundEffect: effect,
     }));
   }, [setCurrentTheme]);
 
@@ -180,6 +190,14 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
             <ColorCustomizer
               colors={currentTheme.colors}
               onColorChange={handleColorChange}
+            />
+
+            {/* Background Effect Picker */}
+            <BackgroundEffectPicker
+              selectedEffect={currentTheme.backgroundEffect || 'solid'}
+              onEffectChange={handleBackgroundEffectChange}
+              backgroundColor={currentTheme.colors.background}
+              disabled={!!currentTheme.backgroundImageUrl}
             />
           </div>
         </aside>
