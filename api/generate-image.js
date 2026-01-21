@@ -28,48 +28,47 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Call Google AI Studio Imagen API
+    // Call Gemini 2.0 Flash Image Generation API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:generateImages?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: prompt,
-          config: {
-            numberOfImages: 1,
-            aspectRatio: '16:9',
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseModalities: ['IMAGE', 'TEXT'],
           },
         }),
       }
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Imagen API error:', response.status, errorText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Gemini API error:', response.status, errorData);
       return res.status(response.status).json({
-        error: `Image generation failed: ${response.status}`,
-        details: errorText,
+        error: errorData.error?.message || `Image generation failed: ${response.status}`,
       });
     }
 
     const data = await response.json();
 
     // Extract the generated image from the response
-    // Imagen API returns base64 encoded images in generatedImages array
-    if (data.generatedImages && data.generatedImages.length > 0) {
-      const image = data.generatedImages[0];
+    if (data.candidates && data.candidates.length > 0) {
+      const parts = data.candidates[0].content?.parts || [];
 
-      // The image is returned as base64 encoded data
-      if (image.image && image.image.imageBytes) {
-        const imageUrl = `data:image/png;base64,${image.image.imageBytes}`;
-        return res.status(200).json({ imageUrl });
+      for (const part of parts) {
+        if (part.inlineData && part.inlineData.data) {
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          const imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
+          return res.status(200).json({ imageUrl });
+        }
       }
     }
 
-    return res.status(500).json({ error: 'No image was generated', response: data });
+    return res.status(500).json({ error: 'No image was generated' });
   } catch (error) {
     console.error('Generate image error:', error);
     return res.status(500).json({
