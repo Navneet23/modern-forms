@@ -30,7 +30,7 @@ export default async function handler(req, res) {
   try {
     // Call Google AI Studio Imagen API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:generateImages?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:generateImages?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
