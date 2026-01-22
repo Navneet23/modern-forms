@@ -59,6 +59,18 @@ export function BackgroundImagePicker({
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('artistic');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [editedPrompt, setEditedPrompt] = useState<string>('');
+  const [recentGeneratedImages, setRecentGeneratedImages] = useState<string[]>([]);
+
+  // Add image to recent list (max 6)
+  const addToRecentImages = useCallback((imageUrl: string) => {
+    setRecentGeneratedImages((prev) => {
+      // Don't add duplicates
+      if (prev.includes(imageUrl)) return prev;
+      // Add to front, keep max 6
+      const updated = [imageUrl, ...prev].slice(0, 6);
+      return updated;
+    });
+  }, []);
 
   // Handle AI image generation
   const handleGenerateWithAI = useCallback(async () => {
@@ -84,13 +96,14 @@ export function BackgroundImagePicker({
         setAiError(error);
       } else if (imageUrl) {
         onImageSelect(imageUrl);
+        addToRecentImages(imageUrl);
       }
     } catch (err) {
       setAiError('Failed to generate image. Please try again.');
     } finally {
       setIsGeneratingAI(false);
     }
-  }, [formTitle, formDescription, themeColors, selectedStyle, onImageSelect]);
+  }, [formTitle, formDescription, themeColors, selectedStyle, onImageSelect, addToRecentImages]);
 
   // Handle regenerating image with edited prompt
   const handleTryAgain = useCallback(async () => {
@@ -106,13 +119,19 @@ export function BackgroundImagePicker({
         setAiError(error);
       } else if (imageUrl) {
         onImageSelect(imageUrl);
+        addToRecentImages(imageUrl);
       }
     } catch (err) {
       setAiError('Failed to regenerate image. Please try again.');
     } finally {
       setIsRegenerating(false);
     }
-  }, [editedPrompt, onImageSelect]);
+  }, [editedPrompt, onImageSelect, addToRecentImages]);
+
+  // Handle selecting a recent generated image
+  const handleSelectRecentImage = useCallback((imageUrl: string) => {
+    onImageSelect(imageUrl);
+  }, [onImageSelect]);
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,14 +268,31 @@ export function BackgroundImagePicker({
       {generatedPrompt && (
         <div className="space-y-2">
           <label className="text-xs text-gray-500 font-medium">AI Generated Prompt</label>
-          <textarea
-            value={editedPrompt}
-            onChange={(e) => setEditedPrompt(e.target.value)}
-            disabled={isRegenerating}
-            className="w-full px-3 py-2 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-            rows={4}
-            placeholder="Edit the prompt to regenerate..."
-          />
+          <div className="relative">
+            <textarea
+              value={editedPrompt}
+              onChange={(e) => setEditedPrompt(e.target.value)}
+              disabled={isRegenerating}
+              className="w-full px-3 py-2 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+              rows={4}
+              placeholder="Edit the prompt to regenerate..."
+            />
+            {/* Shimmer overlay during regeneration */}
+            {isRegenerating && (
+              <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent shimmer-overlay" />
+                <style>{`
+                  .shimmer-overlay {
+                    animation: shimmerOverlay 1.5s infinite;
+                  }
+                  @keyframes shimmerOverlay {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                  }
+                `}</style>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleTryAgain}
             disabled={isRegenerating || !editedPrompt.trim()}
@@ -286,6 +322,46 @@ export function BackgroundImagePicker({
               </>
             )}
           </button>
+
+          {/* Recent Generated Images */}
+          {recentGeneratedImages.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <label className="text-xs text-gray-500 font-medium">Recent Generated Images</label>
+              <div className="space-y-1.5">
+                {recentGeneratedImages.map((imageUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSelectRecentImage(imageUrl)}
+                    className={`
+                      relative w-full h-16 rounded-lg overflow-hidden border-2 transition-all
+                      hover:opacity-90
+                      ${currentImageUrl === imageUrl
+                        ? 'border-indigo-500 ring-2 ring-indigo-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                      }
+                    `}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`Generated image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {currentImageUrl === imageUrl && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
