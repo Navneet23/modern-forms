@@ -25,19 +25,27 @@ export function BackgroundImagePicker({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('abstract');
+  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   // Handle AI image generation
   const handleGenerateWithAI = useCallback(async () => {
     setIsGeneratingAI(true);
     setAiError(null);
+    setGeneratedPrompt(null);
 
     try {
-      const { imageUrl, error } = await generateBackgroundImage(
+      const { imageUrl, generatedPrompt: prompt, error } = await generateBackgroundImage(
         formTitle,
         formDescription,
         themeColors,
         selectedStyle
       );
+
+      if (prompt) {
+        setGeneratedPrompt(prompt);
+        setShowPrompt(true);
+      }
 
       if (error) {
         setAiError(error);
@@ -175,6 +183,31 @@ export function BackgroundImagePicker({
         <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
           {aiError}
         </p>
+      )}
+
+      {/* Generated Prompt Display */}
+      {generatedPrompt && (
+        <div className="space-y-1.5">
+          <button
+            onClick={() => setShowPrompt(!showPrompt)}
+            className="flex items-center justify-between w-full text-xs text-gray-500 hover:text-gray-700"
+          >
+            <span className="font-medium">AI Generated Prompt</span>
+            <svg
+              className={`w-4 h-4 transition-transform ${showPrompt ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showPrompt && (
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200 max-h-24 overflow-y-auto">
+              {generatedPrompt}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Tabs */}

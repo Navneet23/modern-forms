@@ -14,10 +14,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt } = req.body;
+  const { title, description, colors, style } = req.body;
 
-  if (!prompt) {
-    return res.status(400).json({ error: 'Missing prompt parameter' });
+  if (!title) {
+    return res.status(400).json({ error: 'Missing title parameter' });
   }
 
   // Get API key from environment variable
@@ -28,16 +28,71 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Call Gemini 2.0 Flash Image Generation API
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
+    // Step 1: Generate detailed prompt using Gemini 2.5 Flash
+    const promptGenerationRequest = `Create a detailed, descriptive prompt for generating a background image for a form.
+
+Form title: "${title}"
+${description ? `Form description: "${description}"` : ''}
+Color palette: primary ${colors?.primary || '#4F46E5'}, secondary ${colors?.secondary || '#7C3AED'}, surface ${colors?.surface || '#FFFFFF'}
+Style: ${style || 'Abstract - Geometric shapes, modern patterns, clean lines'}
+
+Generate a detailed, vivid prompt that describes the background image. The prompt should:
+- Be specific about colors, shapes, textures, and composition
+- Match the requested style
+- Be suitable for a form background (not too busy or distracting)
+- Not include any text, logos, or watermarks in the image
+
+Respond with ONLY the image generation prompt, nothing else.`;
+
+    const textGenResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: [{ text: promptGenerationRequest }] }],
+        }),
+      }
+    );
+
+    if (!textGenResponse.ok) {
+      const errorData = await textGenResponse.json().catch(() => ({}));
+      console.error('Prompt generation error:', textGenResponse.status, errorData);
+      return res.status(textGenResponse.status).json({
+        error: errorData.error?.message || `Prompt generation failed: ${textGenResponse.status}`,
+      });
+    }
+
+    const textGenData = await textGenResponse.json();
+
+    // Extract generated prompt
+    let generatedPrompt = '';
+    if (textGenData.candidates && textGenData.candidates.length > 0) {
+      const parts = textGenData.candidates[0].content?.parts || [];
+      for (const part of parts) {
+        if (part.text) {
+          generatedPrompt = part.text.trim();
+          break;
+        }
+      }
+    }
+
+    if (!generatedPrompt) {
+      return res.status(500).json({ error: 'Failed to generate prompt' });
+    }
+
+    // Step 2: Generate image using Gemini 2.5 Flash Image
+    const imageGenResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: generatedPrompt }] }],
           generationConfig: {
             responseModalities: ['IMAGE', 'TEXT'],
           },
@@ -45,30 +100,37 @@ export default async function handler(req, res) {
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Gemini API error:', response.status, errorData);
-      return res.status(response.status).json({
-        error: errorData.error?.message || `Image generation failed: ${response.status}`,
+    if (!imageGenResponse.ok) {
+      const errorData = await imageGenResponse.json().catch(() => ({}));
+      console.error('Image generation error:', imageGenResponse.status, errorData);
+      return res.status(imageGenResponse.status).json({
+        error: errorData.error?.message || `Image generation failed: ${imageGenResponse.status}`,
+        generatedPrompt, // Still return the prompt even if image fails
       });
     }
 
-    const data = await response.json();
+    const imageGenData = await imageGenResponse.json();
 
-    // Extract the generated image from the response
-    if (data.candidates && data.candidates.length > 0) {
-      const parts = data.candidates[0].content?.parts || [];
+    // Extract the generated image
+    if (imageGenData.candidates && imageGenData.candidates.length > 0) {
+      const parts = imageGenData.candidates[0].content?.parts || [];
 
       for (const part of parts) {
         if (part.inlineData && part.inlineData.data) {
           const mimeType = part.inlineData.mimeType || 'image/png';
           const imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
-          return res.status(200).json({ imageUrl });
+          return res.status(200).json({
+            imageUrl,
+            generatedPrompt,
+          });
         }
       }
     }
 
-    return res.status(500).json({ error: 'No image was generated' });
+    return res.status(500).json({
+      error: 'No image was generated',
+      generatedPrompt,
+    });
   } catch (error) {
     console.error('Generate image error:', error);
     return res.status(500).json({
