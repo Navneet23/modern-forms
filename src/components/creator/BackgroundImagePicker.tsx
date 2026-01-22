@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { BACKGROUND_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
-import { generateBackgroundImage } from '../../utils/aiImageGeneration';
+import { generateBackgroundImage, IMAGE_STYLES, type ImageStyle } from '../../utils/aiImageGeneration';
 import type { ThemeColors } from '../../types/theme';
 
 interface BackgroundImagePickerProps {
@@ -24,6 +24,7 @@ export function BackgroundImagePicker({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('abstract');
 
   // Handle AI image generation
   const handleGenerateWithAI = useCallback(async () => {
@@ -34,7 +35,8 @@ export function BackgroundImagePicker({
       const { imageUrl, error } = await generateBackgroundImage(
         formTitle,
         formDescription,
-        themeColors
+        themeColors,
+        selectedStyle
       );
 
       if (error) {
@@ -47,7 +49,7 @@ export function BackgroundImagePicker({
     } finally {
       setIsGeneratingAI(false);
     }
-  }, [formTitle, formDescription, themeColors, onImageSelect]);
+  }, [formTitle, formDescription, themeColors, selectedStyle, onImageSelect]);
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,6 +149,26 @@ export function BackgroundImagePicker({
           </>
         )}
       </button>
+
+      {/* AI Style Selector */}
+      <div className="space-y-1.5">
+        <label className="text-xs text-gray-500 font-medium">Image Style</label>
+        <select
+          value={selectedStyle}
+          onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
+          disabled={isGeneratingAI}
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {IMAGE_STYLES.map((style) => (
+            <option key={style.id} value={style.id}>
+              {style.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-400">
+          {IMAGE_STYLES.find(s => s.id === selectedStyle)?.description}
+        </p>
+      </div>
 
       {/* AI Error Message */}
       {aiError && (

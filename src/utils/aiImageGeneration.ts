@@ -1,33 +1,77 @@
 import type { ThemeColors } from '../types/theme';
 
 /**
- * Builds an optimized prompt for AI image generation based on form context and theme colors
+ * Available image generation styles
+ */
+export type ImageStyle = 'abstract' | 'professional' | 'artistic' | 'animated' | 'watercolor' | 'cyberpunk';
+
+export interface ImageStyleOption {
+  id: ImageStyle;
+  name: string;
+  description: string;
+}
+
+export const IMAGE_STYLES: ImageStyleOption[] = [
+  {
+    id: 'abstract',
+    name: 'Abstract',
+    description: 'Geometric shapes, modern patterns, clean lines',
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'Clean, corporate feel, subtle textures, business-appropriate',
+  },
+  {
+    id: 'artistic',
+    name: 'Artistic',
+    description: 'Bold brushstrokes, paint textures, expressive feel',
+  },
+  {
+    id: 'animated',
+    name: 'Animated',
+    description: 'Cartoon-like, vibrant colors, playful illustration style',
+  },
+  {
+    id: 'watercolor',
+    name: 'Watercolor',
+    description: 'Soft watercolor painting, flowing colors, organic textures',
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Cyberpunk',
+    description: 'Neon colors, futuristic tech aesthetic, dark with glowing elements',
+  },
+];
+
+/**
+ * Builds an optimized prompt for AI image generation based on form context, theme colors, and style
  */
 export function buildImagePrompt(
   title: string,
   description: string | undefined,
-  colors: ThemeColors
+  colors: ThemeColors,
+  style: ImageStyle = 'abstract'
 ): string {
-  const formContext = description
-    ? `${title}. ${description}`
-    : title;
+  const styleOption = IMAGE_STYLES.find(s => s.id === style) || IMAGE_STYLES[0];
 
-  return `Abstract background image for a form about: ${formContext}.
-Color palette: primary ${colors.primary}, surface ${colors.surface}, secondary ${colors.secondary}.
-Style: modern, professional, subtle gradient, suitable as form background.
-No text, no faces, abstract patterns or soft gradients.`;
+  return `Create a background image for a form with title: "${title}"${description ? `. The form description is: "${description}"` : ''}.
+Color palette to use: primary ${colors.primary}, secondary ${colors.secondary}, surface ${colors.surface}.
+Style: ${styleOption.description}.
+The image should be suitable as a form background. No text, no faces, no people.`;
 }
 
 /**
- * Generates a background image using Google AI Studio (Imagen)
+ * Generates a background image using Google AI Studio (Gemini)
  * This calls our serverless API endpoint which securely handles the API key
  */
 export async function generateBackgroundImage(
   title: string,
   description: string | undefined,
-  colors: ThemeColors
+  colors: ThemeColors,
+  style: ImageStyle = 'abstract'
 ): Promise<{ imageUrl: string | null; error: string | null }> {
-  const prompt = buildImagePrompt(title, description, colors);
+  const prompt = buildImagePrompt(title, description, colors, style);
 
   try {
     const response = await fetch('/api/generate-image', {
