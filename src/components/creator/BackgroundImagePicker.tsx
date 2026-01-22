@@ -3,32 +3,21 @@ import { BACKGROUND_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
 import { generateBackgroundImage, regenerateImageFromPrompt, IMAGE_STYLES, type ImageStyle } from '../../utils/aiImageGeneration';
 import type { ThemeColors } from '../../types/theme';
 
-// Shimmer animation component for AI generation loading state
+// M3 Shimmer animation component for AI generation loading state
 function PromptShimmer() {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <div className="h-3 w-3 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 animate-pulse" />
-        <span className="text-xs text-gray-500 font-medium">Generating prompt...</span>
+        <div className="h-3 w-3 rounded-full bg-gradient-to-r from-primary-400 to-primary-600 animate-pulse" />
+        <span className="text-label-md text-on-surface-variant">Generating prompt...</span>
       </div>
-      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="relative overflow-hidden shape-small border border-outline-variant bg-surface-container p-3">
         <div className="space-y-2">
-          <div className="h-3 bg-gray-200 rounded w-full shimmer-line" />
-          <div className="h-3 bg-gray-200 rounded w-11/12 shimmer-line" style={{ animationDelay: '0.1s' }} />
-          <div className="h-3 bg-gray-200 rounded w-4/5 shimmer-line" style={{ animationDelay: '0.2s' }} />
-          <div className="h-3 bg-gray-200 rounded w-3/4 shimmer-line" style={{ animationDelay: '0.3s' }} />
+          <div className="h-3 bg-surface-container-high rounded-full w-full shimmer-line" />
+          <div className="h-3 bg-surface-container-high rounded-full w-11/12 shimmer-line" style={{ animationDelay: '0.1s' }} />
+          <div className="h-3 bg-surface-container-high rounded-full w-4/5 shimmer-line" style={{ animationDelay: '0.2s' }} />
+          <div className="h-3 bg-surface-container-high rounded-full w-3/4 shimmer-line" style={{ animationDelay: '0.3s' }} />
         </div>
-        <style>{`
-          .shimmer-line {
-            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-          }
-          @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-          }
-        `}</style>
       </div>
     </div>
   );
@@ -64,9 +53,7 @@ export function BackgroundImagePicker({
   // Add image to recent list (max 6)
   const addToRecentImages = useCallback((imageUrl: string) => {
     setRecentGeneratedImages((prev) => {
-      // Don't add duplicates
       if (prev.includes(imageUrl)) return prev;
-      // Add to front, keep max 6
       const updated = [imageUrl, ...prev].slice(0, 6);
       return updated;
     });
@@ -138,13 +125,11 @@ export function BackgroundImagePicker({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('Image must be less than 5MB');
       return;
@@ -172,91 +157,93 @@ export function BackgroundImagePicker({
   }, [onImageSelect]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* M3 Section Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700">Background Image</h3>
+        <h3 className="text-title-sm text-on-surface">Background Image</h3>
         {currentImageUrl && (
           <button
             onClick={handleRemoveBackground}
-            className="text-xs text-red-600 hover:text-red-700 font-medium"
+            className="md-text-button text-error hover:bg-error-50 px-2 h-8"
           >
             Remove
           </button>
         )}
       </div>
 
-      {/* Current image preview */}
+      {/* M3 Current image preview card */}
       {currentImageUrl && (
-        <div className="relative rounded-lg overflow-hidden border border-gray-200">
+        <div className="relative shape-medium overflow-hidden border border-outline-variant">
           <img
             src={currentImageUrl}
             alt="Current background"
             className="w-full h-20 object-cover"
           />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <span className="text-white text-xs font-medium bg-black/50 px-2 py-1 rounded">
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span className="md-chip bg-surface/90 text-on-surface text-label-sm">
               Current
             </span>
           </div>
         </div>
       )}
 
-      {/* Generate with AI Button */}
+      {/* M3 Filled Tonal Button - Generate with AI */}
       <button
         onClick={handleGenerateWithAI}
         disabled={isGeneratingAI}
         className={`
-          w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all
-          flex items-center justify-center gap-2
+          md-tonal-button w-full h-11
           ${isGeneratingAI
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+            ? 'bg-surface-container-high text-on-surface/38 cursor-not-allowed'
+            : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
           }
         `}
       >
         {isGeneratingAI ? (
           <>
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            Generating...
+            <span className="text-label-lg">Generating...</span>
           </>
         ) : (
           <>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            Generate with AI
+            <span className="text-label-lg">Generate with AI</span>
           </>
         )}
       </button>
 
-      {/* AI Style Selector */}
-      <div className="space-y-1.5">
-        <label className="text-xs text-gray-500 font-medium">Image Style</label>
-        <select
-          value={selectedStyle}
-          onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
-          disabled={isGeneratingAI}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {IMAGE_STYLES.map((style) => (
-            <option key={style.id} value={style.id}>
-              {style.name}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-gray-400">
+      {/* M3 Outlined Select - Style Selector */}
+      <div className="space-y-2">
+        <label className="text-label-md text-on-surface-variant">Image Style</label>
+        <div className="md-select">
+          <select
+            value={selectedStyle}
+            onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
+            disabled={isGeneratingAI}
+            className="w-full px-4 py-3 text-body-md bg-transparent border border-outline shape-xs focus:outline-none focus:border-2 focus:border-primary disabled:opacity-38 disabled:cursor-not-allowed transition-all duration-short4 ease-md-standard"
+          >
+            {IMAGE_STYLES.map((style) => (
+              <option key={style.id} value={style.id}>
+                {style.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="text-body-sm text-on-surface-variant">
           {IMAGE_STYLES.find(s => s.id === selectedStyle)?.description}
         </p>
       </div>
 
-      {/* AI Error Message */}
+      {/* M3 Error Container */}
       {aiError && (
-        <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
-          {aiError}
-        </p>
+        <div className="shape-small bg-error-50 border border-error-200 p-3">
+          <p className="text-body-sm text-error-700">{aiError}</p>
+        </div>
       )}
 
       {/* Shimmer animation during prompt generation */}
@@ -264,80 +251,71 @@ export function BackgroundImagePicker({
         <PromptShimmer />
       )}
 
-      {/* Editable Prompt with Try Again */}
+      {/* M3 Editable Prompt Card with Try Again */}
       {generatedPrompt && (
-        <div className="space-y-2">
-          <label className="text-xs text-gray-500 font-medium">AI Generated Prompt</label>
+        <div className="md-card-outlined p-4 space-y-3">
+          <label className="text-label-md text-on-surface-variant">AI Generated Prompt</label>
           <div className="relative">
             <textarea
               value={editedPrompt}
               onChange={(e) => setEditedPrompt(e.target.value)}
               disabled={isRegenerating}
-              className="w-full px-3 py-2 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+              className="w-full px-4 py-3 text-body-sm text-on-surface bg-surface-container-low border border-outline-variant shape-xs resize-none focus:outline-none focus:border-2 focus:border-primary disabled:opacity-50 transition-all duration-short4 ease-md-standard"
               rows={4}
               placeholder="Edit the prompt to regenerate..."
             />
             {/* Shimmer overlay during regeneration */}
             {isRegenerating && (
-              <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+              <div className="absolute inset-0 shape-xs overflow-hidden pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent shimmer-overlay" />
-                <style>{`
-                  .shimmer-overlay {
-                    animation: shimmerOverlay 1.5s infinite;
-                  }
-                  @keyframes shimmerOverlay {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
-                  }
-                `}</style>
               </div>
             )}
           </div>
+
+          {/* M3 Filled Button - Try Again */}
           <button
             onClick={handleTryAgain}
             disabled={isRegenerating || !editedPrompt.trim()}
             className={`
-              w-full py-2 px-4 rounded-lg font-medium text-xs transition-all
-              flex items-center justify-center gap-2
+              md-filled-button w-full h-10
               ${isRegenerating || !editedPrompt.trim()
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-800 text-white hover:bg-gray-900'
+                ? 'bg-on-surface/12 text-on-surface/38 cursor-not-allowed shadow-none'
+                : 'bg-secondary text-on-secondary hover:shadow-elevation-1'
               }
             `}
           >
             {isRegenerating ? (
               <>
-                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Regenerating...
+                <span className="text-label-lg">Regenerating...</span>
               </>
             ) : (
               <>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Try Again
+                <span className="text-label-lg">Try Again</span>
               </>
             )}
           </button>
 
-          {/* Recent Generated Images */}
+          {/* M3 Recent Generated Images List */}
           {recentGeneratedImages.length > 0 && (
-            <div className="space-y-2 pt-2">
-              <label className="text-xs text-gray-500 font-medium">Recent Generated Images</label>
-              <div className="space-y-1.5">
+            <div className="space-y-2 pt-2 border-t border-outline-variant">
+              <label className="text-label-md text-on-surface-variant">Recent Generated</label>
+              <div className="space-y-2">
                 {recentGeneratedImages.map((imageUrl, index) => (
                   <button
                     key={index}
                     onClick={() => handleSelectRecentImage(imageUrl)}
                     className={`
-                      relative w-full h-16 rounded-lg overflow-hidden border-2 transition-all
-                      hover:opacity-90
+                      md-list-item w-full h-16 p-0 shape-medium overflow-hidden border-2 transition-all duration-short4 ease-md-standard
                       ${currentImageUrl === imageUrl
-                        ? 'border-indigo-500 ring-2 ring-indigo-200'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-outline-variant hover:border-outline'
                       }
                     `}
                   >
@@ -347,8 +325,8 @@ export function BackgroundImagePicker({
                       className="w-full h-full object-cover"
                     />
                     {currentImageUrl === imageUrl && (
-                      <div className="absolute top-1 right-1 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="absolute top-1.5 right-1.5 w-6 h-6 bg-primary shape-full flex items-center justify-center shadow-elevation-1">
+                        <svg className="w-4 h-4 text-on-primary" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -365,29 +343,31 @@ export function BackgroundImagePicker({
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+      {/* M3 Segmented Button - Tabs */}
+      <div className="md-segmented-button-container w-full">
         <button
           onClick={() => setActiveTab('browse')}
           className={`
-            flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-all
+            md-segmented-button text-label-lg
             ${activeTab === 'browse'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-secondary-100 text-on-secondary-container'
+              : 'bg-transparent text-on-surface hover:bg-surface-container-high'
             }
           `}
+          aria-selected={activeTab === 'browse'}
         >
           Browse
         </button>
         <button
           onClick={() => setActiveTab('upload')}
           className={`
-            flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-all
+            md-segmented-button text-label-lg
             ${activeTab === 'upload'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-secondary-100 text-on-secondary-container'
+              : 'bg-transparent text-on-surface hover:bg-surface-container-high'
             }
           `}
+          aria-selected={activeTab === 'upload'}
         >
           Upload
         </button>
@@ -395,19 +375,19 @@ export function BackgroundImagePicker({
 
       {/* Tab Content */}
       <div className="min-h-[160px]">
-        {/* Browse Tab */}
+        {/* Browse Tab - M3 Image Grid */}
         {activeTab === 'browse' && (
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-3 gap-2">
             {BACKGROUND_GALLERY.map((imageId) => (
               <button
                 key={imageId}
                 onClick={() => handleSelectImage(imageId)}
                 className={`
-                  relative aspect-[4/3] rounded-md overflow-hidden border-2 transition-all
-                  hover:opacity-90
+                  relative aspect-[4/3] shape-small overflow-hidden border-2 transition-all duration-short4 ease-md-standard
+                  hover:scale-[1.02] active:scale-[0.98]
                   ${currentImageUrl?.includes(`/id/${imageId}/`)
-                    ? 'border-blue-500 ring-2 ring-blue-200'
-                    : 'border-transparent'
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-transparent hover:border-outline-variant'
                   }
                 `}
               >
@@ -418,8 +398,8 @@ export function BackgroundImagePicker({
                   loading="lazy"
                 />
                 {currentImageUrl?.includes(`/id/${imageId}/`) && (
-                  <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="absolute top-1 right-1 w-5 h-5 bg-primary shape-full flex items-center justify-center shadow-elevation-1">
+                    <svg className="w-3 h-3 text-on-primary" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -433,15 +413,15 @@ export function BackgroundImagePicker({
           </div>
         )}
 
-        {/* Upload Tab */}
+        {/* Upload Tab - M3 Upload Area */}
         {activeTab === 'upload' && (
           <div className="space-y-3">
-            <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-              <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-outline-variant shape-medium cursor-pointer hover:border-primary hover:bg-primary-50/50 transition-all duration-short4 ease-md-standard">
+              <svg className="w-10 h-10 text-on-surface-variant mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-xs text-gray-600 font-medium">Click to upload</span>
-              <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</span>
+              <span className="text-label-lg text-on-surface">Click to upload</span>
+              <span className="text-body-sm text-on-surface-variant mt-1">PNG, JPG up to 5MB</span>
               <input
                 type="file"
                 accept="image/*"
@@ -451,7 +431,7 @@ export function BackgroundImagePicker({
             </label>
 
             {uploadedImage && (
-              <div className="relative rounded-lg overflow-hidden border border-gray-200">
+              <div className="relative shape-medium overflow-hidden border border-outline-variant">
                 <img
                   src={uploadedImage}
                   alt="Uploaded background"
@@ -464,9 +444,9 @@ export function BackgroundImagePicker({
                       onImageSelect(undefined);
                     }
                   }}
-                  className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600"
+                  className="md-fab-small absolute top-2 right-2 bg-error text-on-error hover:shadow-elevation-4"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

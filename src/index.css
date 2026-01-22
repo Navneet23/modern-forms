@@ -2,7 +2,590 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom focus styles for accessibility */
+/* ============================================
+   MATERIAL DESIGN 3 - Design System
+   ============================================ */
+
+@layer base {
+  :root {
+    /* M3 Shape System */
+    --md-sys-shape-corner-none: 0px;
+    --md-sys-shape-corner-extra-small: 4px;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-full: 9999px;
+
+    /* M3 Elevation (using shadows) */
+    --md-sys-elevation-level0: none;
+    --md-sys-elevation-level1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-level2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+    --md-sys-elevation-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px rgba(0, 0, 0, 0.3);
+    --md-sys-elevation-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
+
+    /* M3 State Layer Opacities */
+    --md-sys-state-hover-opacity: 0.08;
+    --md-sys-state-focus-opacity: 0.12;
+    --md-sys-state-pressed-opacity: 0.12;
+    --md-sys-state-dragged-opacity: 0.16;
+
+    /* M3 Motion */
+    --md-sys-motion-duration-short1: 50ms;
+    --md-sys-motion-duration-short2: 100ms;
+    --md-sys-motion-duration-short3: 150ms;
+    --md-sys-motion-duration-short4: 200ms;
+    --md-sys-motion-duration-medium1: 250ms;
+    --md-sys-motion-duration-medium2: 300ms;
+    --md-sys-motion-duration-medium3: 350ms;
+    --md-sys-motion-duration-medium4: 400ms;
+    --md-sys-motion-duration-long1: 450ms;
+    --md-sys-motion-duration-long2: 500ms;
+    --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+    --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  }
+}
+
+/* ============================================
+   M3 Component Layer
+   ============================================ */
+
+@layer components {
+  /* M3 Filled Button */
+  .md-filled-button {
+    @apply inline-flex items-center justify-center gap-2 px-6 h-10 font-medium text-sm;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-filled-button:hover {
+    box-shadow: var(--md-sys-elevation-level1);
+  }
+
+  .md-filled-button:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  .md-filled-button:active {
+    transform: scale(0.98);
+  }
+
+  .md-filled-button:disabled {
+    @apply opacity-38 cursor-not-allowed;
+    box-shadow: none;
+  }
+
+  /* M3 Outlined Button */
+  .md-outlined-button {
+    @apply inline-flex items-center justify-center gap-2 px-6 h-10 font-medium text-sm border;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-outlined-button:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  .md-outlined-button:active {
+    transform: scale(0.98);
+  }
+
+  .md-outlined-button:disabled {
+    @apply opacity-38 cursor-not-allowed;
+  }
+
+  /* M3 Text Button */
+  .md-text-button {
+    @apply inline-flex items-center justify-center gap-2 px-3 h-10 font-medium text-sm;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-text-button:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  .md-text-button:active {
+    transform: scale(0.98);
+  }
+
+  /* M3 Tonal Button (Filled Tonal) */
+  .md-tonal-button {
+    @apply inline-flex items-center justify-center gap-2 px-6 h-10 font-medium text-sm;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-tonal-button:hover {
+    box-shadow: var(--md-sys-elevation-level1);
+  }
+
+  .md-tonal-button:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  .md-tonal-button:active {
+    transform: scale(0.98);
+  }
+
+  /* M3 FAB (Floating Action Button) */
+  .md-fab {
+    @apply inline-flex items-center justify-center w-14 h-14;
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-level3);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-fab:hover {
+    box-shadow: var(--md-sys-elevation-level4);
+  }
+
+  .md-fab:active {
+    transform: scale(0.95);
+  }
+
+  /* M3 Small FAB */
+  .md-fab-small {
+    @apply inline-flex items-center justify-center w-10 h-10;
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-level3);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  /* M3 Extended FAB */
+  .md-fab-extended {
+    @apply inline-flex items-center justify-center gap-2 px-4 h-14 font-medium;
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-level3);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  /* M3 Icon Button */
+  .md-icon-button {
+    @apply inline-flex items-center justify-center w-10 h-10;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-icon-button:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  .md-icon-button:active {
+    transform: scale(0.9);
+  }
+
+  /* M3 Filled Text Field */
+  .md-filled-text-field {
+    @apply relative w-full;
+  }
+
+  .md-filled-text-field input,
+  .md-filled-text-field textarea {
+    @apply w-full px-4 pt-6 pb-2 text-base bg-gray-100 border-0 border-b-2 border-gray-400;
+    border-radius: var(--md-sys-shape-corner-extra-small) var(--md-sys-shape-corner-extra-small) 0 0;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-filled-text-field input:hover,
+  .md-filled-text-field textarea:hover {
+    @apply bg-gray-200;
+  }
+
+  .md-filled-text-field input:focus,
+  .md-filled-text-field textarea:focus {
+    @apply outline-none bg-gray-100;
+  }
+
+  .md-filled-text-field label {
+    @apply absolute left-4 top-4 text-base text-gray-600 pointer-events-none;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-filled-text-field input:focus + label,
+  .md-filled-text-field input:not(:placeholder-shown) + label,
+  .md-filled-text-field textarea:focus + label,
+  .md-filled-text-field textarea:not(:placeholder-shown) + label {
+    @apply text-xs top-2;
+  }
+
+  /* M3 Outlined Text Field */
+  .md-outlined-text-field {
+    @apply relative w-full;
+  }
+
+  .md-outlined-text-field input,
+  .md-outlined-text-field textarea {
+    @apply w-full px-4 py-4 text-base bg-transparent border border-gray-400;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-outlined-text-field input:hover,
+  .md-outlined-text-field textarea:hover {
+    @apply border-gray-900;
+  }
+
+  .md-outlined-text-field input:focus,
+  .md-outlined-text-field textarea:focus {
+    @apply outline-none border-2;
+  }
+
+  .md-outlined-text-field label {
+    @apply absolute left-3 -top-2.5 px-1 text-xs bg-white text-gray-600;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  /* M3 Card - Elevated */
+  .md-card-elevated {
+    @apply bg-white;
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-level1);
+    transition: box-shadow var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-card-elevated:hover {
+    box-shadow: var(--md-sys-elevation-level2);
+  }
+
+  /* M3 Card - Filled */
+  .md-card-filled {
+    @apply bg-gray-100;
+    border-radius: var(--md-sys-shape-corner-medium);
+  }
+
+  /* M3 Card - Outlined */
+  .md-card-outlined {
+    @apply bg-white border border-gray-200;
+    border-radius: var(--md-sys-shape-corner-medium);
+  }
+
+  /* M3 Chip - Assist */
+  .md-chip {
+    @apply inline-flex items-center gap-2 px-4 h-8 text-sm font-medium border border-gray-300;
+    border-radius: var(--md-sys-shape-corner-small);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-chip:hover {
+    @apply bg-gray-100;
+  }
+
+  .md-chip:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  /* M3 Chip - Selected */
+  .md-chip-selected {
+    @apply inline-flex items-center gap-2 px-4 h-8 text-sm font-medium;
+    border-radius: var(--md-sys-shape-corner-small);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  /* M3 Navigation Rail Item */
+  .md-nav-item {
+    @apply flex flex-col items-center justify-center gap-1 px-4 py-3 text-xs font-medium;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-nav-item:hover {
+    @apply bg-gray-100;
+  }
+
+  /* M3 Tabs */
+  .md-tabs {
+    @apply flex border-b border-gray-200;
+  }
+
+  .md-tab {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 h-12 text-sm font-medium relative;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-tab:hover {
+    @apply bg-gray-50;
+  }
+
+  .md-tab::after {
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-transparent;
+    content: '';
+    transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-tab[aria-selected="true"]::after,
+  .md-tab.active::after {
+    @apply bg-current;
+  }
+
+  /* M3 Segmented Button (for tabs/toggles) */
+  .md-segmented-button-container {
+    @apply inline-flex border border-gray-300 overflow-hidden;
+    border-radius: var(--md-sys-shape-corner-full);
+  }
+
+  .md-segmented-button {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 h-10 text-sm font-medium border-r border-gray-300 last:border-r-0;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-segmented-button:hover {
+    @apply bg-gray-50;
+  }
+
+  .md-segmented-button[aria-selected="true"],
+  .md-segmented-button.selected {
+    @apply bg-gray-100;
+  }
+
+  /* M3 Switch */
+  .md-switch {
+    @apply relative inline-flex items-center w-13 h-8 cursor-pointer;
+  }
+
+  .md-switch-track {
+    @apply w-full h-full bg-gray-200 border-2 border-gray-400;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-switch-thumb {
+    @apply absolute left-1 w-6 h-6 bg-gray-400 rounded-full shadow-md;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-switch input:checked ~ .md-switch-track {
+    @apply border-transparent;
+  }
+
+  .md-switch input:checked ~ .md-switch-thumb {
+    @apply left-6;
+  }
+
+  /* M3 Radio Button */
+  .md-radio {
+    @apply appearance-none w-5 h-5 border-2 border-gray-400 rounded-full cursor-pointer relative;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-radio:checked {
+    @apply border-current;
+  }
+
+  .md-radio:checked::after {
+    @apply absolute top-1/2 left-1/2 w-2.5 h-2.5 rounded-full bg-current;
+    content: '';
+    transform: translate(-50%, -50%);
+  }
+
+  .md-radio:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  /* M3 Checkbox */
+  .md-checkbox {
+    @apply appearance-none w-[18px] h-[18px] border-2 border-gray-400 cursor-pointer relative;
+    border-radius: 2px;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-checkbox:checked {
+    @apply border-current bg-current;
+  }
+
+  .md-checkbox:checked::after {
+    @apply absolute top-0 left-1 w-1.5 h-2.5 border-r-2 border-b-2 border-white;
+    content: '';
+    transform: rotate(45deg);
+  }
+
+  .md-checkbox:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+  }
+
+  /* M3 Select/Dropdown */
+  .md-select {
+    @apply relative w-full;
+  }
+
+  .md-select select {
+    @apply w-full px-4 py-4 text-base bg-transparent border border-gray-400 appearance-none cursor-pointer;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-select select:hover {
+    @apply border-gray-900;
+  }
+
+  .md-select select:focus {
+    @apply outline-none border-2;
+  }
+
+  .md-select::after {
+    @apply absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none;
+    content: '';
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid currentColor;
+  }
+
+  /* M3 Progress Indicator - Linear */
+  .md-linear-progress {
+    @apply relative w-full h-1 bg-gray-200 overflow-hidden;
+    border-radius: var(--md-sys-shape-corner-full);
+  }
+
+  .md-linear-progress-indicator {
+    @apply absolute top-0 left-0 h-full;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: width var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+  }
+
+  /* M3 Dialog */
+  .md-dialog {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  }
+
+  .md-dialog-scrim {
+    @apply absolute inset-0 bg-black/50;
+  }
+
+  .md-dialog-container {
+    @apply relative bg-white max-w-md w-full max-h-[90vh] overflow-auto;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    box-shadow: var(--md-sys-elevation-level3);
+  }
+
+  .md-dialog-content {
+    @apply p-6;
+  }
+
+  .md-dialog-actions {
+    @apply flex justify-end gap-2 px-6 pb-6;
+  }
+
+  /* M3 Snackbar */
+  .md-snackbar {
+    @apply fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-3 text-sm text-white bg-gray-800;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    box-shadow: var(--md-sys-elevation-level3);
+  }
+
+  /* M3 Tooltip */
+  .md-tooltip {
+    @apply px-2 py-1 text-xs text-white bg-gray-700;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+  }
+
+  /* M3 Divider */
+  .md-divider {
+    @apply w-full h-px bg-gray-200;
+  }
+
+  .md-divider-inset {
+    @apply ml-4;
+  }
+
+  /* M3 List Item */
+  .md-list-item {
+    @apply flex items-center gap-4 px-4 py-3 min-h-[56px] cursor-pointer;
+    transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .md-list-item:hover {
+    @apply bg-gray-50;
+  }
+
+  .md-list-item:focus-visible {
+    @apply outline-none bg-gray-100;
+  }
+
+  /* M3 Badge */
+  .md-badge {
+    @apply inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-xs font-medium rounded-full;
+  }
+
+  .md-badge-large {
+    @apply inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-medium rounded-full;
+  }
+}
+
+/* ============================================
+   M3 Utilities Layer
+   ============================================ */
+
+@layer utilities {
+  /* M3 Opacity values */
+  .opacity-38 {
+    opacity: 0.38;
+  }
+
+  /* M3 State layers */
+  .state-layer-hover {
+    @apply relative;
+  }
+
+  .state-layer-hover::before {
+    @apply absolute inset-0 bg-current opacity-0 pointer-events-none;
+    content: '';
+    transition: opacity var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  }
+
+  .state-layer-hover:hover::before {
+    opacity: var(--md-sys-state-hover-opacity);
+  }
+
+  /* M3 Shapes */
+  .shape-none { border-radius: var(--md-sys-shape-corner-none); }
+  .shape-extra-small { border-radius: var(--md-sys-shape-corner-extra-small); }
+  .shape-small { border-radius: var(--md-sys-shape-corner-small); }
+  .shape-medium { border-radius: var(--md-sys-shape-corner-medium); }
+  .shape-large { border-radius: var(--md-sys-shape-corner-large); }
+  .shape-extra-large { border-radius: var(--md-sys-shape-corner-extra-large); }
+  .shape-full { border-radius: var(--md-sys-shape-corner-full); }
+
+  /* M3 Elevations */
+  .elevation-0 { box-shadow: var(--md-sys-elevation-level0); }
+  .elevation-1 { box-shadow: var(--md-sys-elevation-level1); }
+  .elevation-2 { box-shadow: var(--md-sys-elevation-level2); }
+  .elevation-3 { box-shadow: var(--md-sys-elevation-level3); }
+  .elevation-4 { box-shadow: var(--md-sys-elevation-level4); }
+  .elevation-5 { box-shadow: var(--md-sys-elevation-level5); }
+
+  /* M3 Typography - Display */
+  .text-display-large { @apply text-[57px] leading-[64px] tracking-[-0.25px] font-normal; }
+  .text-display-medium { @apply text-[45px] leading-[52px] tracking-normal font-normal; }
+  .text-display-small { @apply text-[36px] leading-[44px] tracking-normal font-normal; }
+
+  /* M3 Typography - Headline */
+  .text-headline-large { @apply text-[32px] leading-[40px] tracking-normal font-normal; }
+  .text-headline-medium { @apply text-[28px] leading-[36px] tracking-normal font-normal; }
+  .text-headline-small { @apply text-[24px] leading-[32px] tracking-normal font-normal; }
+
+  /* M3 Typography - Title */
+  .text-title-large { @apply text-[22px] leading-[28px] tracking-normal font-normal; }
+  .text-title-medium { @apply text-base leading-6 tracking-[0.15px] font-medium; }
+  .text-title-small { @apply text-sm leading-5 tracking-[0.1px] font-medium; }
+
+  /* M3 Typography - Body */
+  .text-body-large { @apply text-base leading-6 tracking-[0.5px] font-normal; }
+  .text-body-medium { @apply text-sm leading-5 tracking-[0.25px] font-normal; }
+  .text-body-small { @apply text-xs leading-4 tracking-[0.4px] font-normal; }
+
+  /* M3 Typography - Label */
+  .text-label-large { @apply text-sm leading-5 tracking-[0.1px] font-medium; }
+  .text-label-medium { @apply text-xs leading-4 tracking-[0.5px] font-medium; }
+  .text-label-small { @apply text-[11px] leading-4 tracking-[0.5px] font-medium; }
+}
+
+/* ============================================
+   Custom focus styles for accessibility
+   ============================================ */
+
 *:focus-visible {
   @apply outline-2 outline-primary-500 outline-offset-2;
 }
@@ -10,13 +593,21 @@
 /* Smooth transitions respecting user preferences */
 @media (prefers-reduced-motion: no-preference) {
   .transition-smooth {
-    @apply transition-all duration-200 ease-out;
+    transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .transition-smooth {
     transition: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -39,7 +630,8 @@
   .slide-enter-active {
     opacity: 1;
     transform: translateX(0);
-    transition: opacity 300ms ease-out, transform 300ms ease-out;
+    transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
+                transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate);
   }
 
   .slide-exit {
@@ -50,7 +642,8 @@
   .slide-exit-active {
     opacity: 0;
     transform: translateX(-50px);
-    transition: opacity 300ms ease-out, transform 300ms ease-out;
+    transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-accelerate),
+                transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-accelerate);
   }
 
   .slide-back-enter {
@@ -61,7 +654,8 @@
   .slide-back-enter-active {
     opacity: 1;
     transform: translateX(0);
-    transition: opacity 300ms ease-out, transform 300ms ease-out;
+    transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
+                transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate);
   }
 
   .slide-back-exit {
@@ -72,14 +666,16 @@
   .slide-back-exit-active {
     opacity: 0;
     transform: translateX(50px);
-    transition: opacity 300ms ease-out, transform 300ms ease-out;
+    transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-accelerate),
+                transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-accelerate);
   }
 }
 
-/* Custom radio and checkbox styling */
+/* Legacy custom radio and checkbox styling (keeping for compatibility) */
 .custom-radio,
 .custom-checkbox {
-  @apply appearance-none w-5 h-5 border-2 border-gray-300 bg-white cursor-pointer flex-shrink-0;
+  @apply appearance-none w-5 h-5 border-2 border-gray-400 bg-white cursor-pointer flex-shrink-0;
+  transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
 }
 
 .custom-radio {
@@ -87,7 +683,7 @@
 }
 
 .custom-checkbox {
-  @apply rounded;
+  border-radius: 2px;
 }
 
 .custom-radio:checked,
@@ -110,9 +706,33 @@
 
 /* Progress bar */
 .progress-bar {
-  @apply h-1 bg-gray-200 rounded-sm overflow-hidden;
+  @apply h-1 bg-gray-200 overflow-hidden;
+  border-radius: var(--md-sys-shape-corner-full);
 }
 
 .progress-bar-fill {
-  @apply h-full bg-primary-500 transition-all duration-300 ease-out;
+  @apply h-full bg-primary-500;
+  border-radius: var(--md-sys-shape-corner-full);
+  transition: width var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+}
+
+/* Shimmer animations */
+.shimmer-line {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.shimmer-overlay {
+  animation: shimmerOverlay 1.5s infinite;
+}
+
+@keyframes shimmerOverlay {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
