@@ -2,6 +2,24 @@ import type { ThemeConfig } from '../types/theme';
 
 export const presetThemes: ThemeConfig[] = [
   {
+    id: 'lavender-dreams',
+    name: 'Lavender Dreams',
+    description: 'Soft purples and gentle violets',
+    colors: {
+      primary: '#7c3aed',
+      secondary: '#a78bfa',
+      background: '#faf5ff',
+      surface: '#ffffff',
+      text: '#3b0764',
+      textSecondary: '#6b21a8',
+      border: '#e9d5ff',
+      error: '#ef4444',
+      success: '#22c55e',
+    },
+    borderRadius: 'xl',
+    fontFamily: "'Inter', system-ui, sans-serif",
+  },
+  {
     id: 'clean-slate',
     name: 'Clean Slate',
     description: 'Minimal and clean with subtle grays',
@@ -90,24 +108,6 @@ export const presetThemes: ThemeConfig[] = [
     },
     borderRadius: 'md',
     fontFamily: "'Merriweather', Georgia, serif",
-  },
-  {
-    id: 'lavender-dreams',
-    name: 'Lavender Dreams',
-    description: 'Soft purples and gentle violets',
-    colors: {
-      primary: '#7c3aed',
-      secondary: '#a78bfa',
-      background: '#faf5ff',
-      surface: '#ffffff',
-      text: '#3b0764',
-      textSecondary: '#6b21a8',
-      border: '#e9d5ff',
-      error: '#ef4444',
-      success: '#22c55e',
-    },
-    borderRadius: 'xl',
-    fontFamily: "'Inter', system-ui, sans-serif",
   },
   {
     id: 'corporate',
@@ -260,7 +260,7 @@ export const presetThemes: ThemeConfig[] = [
   },
 ];
 
-export const defaultTheme = presetThemes[0]; // Clean Slate
+export const defaultTheme = presetThemes[0]; // Lavender Dreams
 
 export function getThemeById(id: string): ThemeConfig | undefined {
   return presetThemes.find((theme) => theme.id === id);
