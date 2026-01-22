@@ -14,10 +14,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { title, description, colors, style } = req.body;
+  const { title, description, colors, style, prompt: directPrompt } = req.body;
 
-  if (!title) {
-    return res.status(400).json({ error: 'Missing title parameter' });
+  // If directPrompt is provided, skip text generation and go straight to image
+  // Otherwise, require title for prompt generation
+  if (!directPrompt && !title) {
+    return res.status(400).json({ error: 'Missing title or prompt parameter' });
   }
 
   // Get API key from environment variable
@@ -28,8 +30,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Generate detailed prompt using Gemini 2.5 Flash
-    const promptGenerationRequest = `Create a detailed, descriptive prompt for generating a background image for a form.
+    let generatedPrompt = directPrompt || '';
+
+    // Step 1: Generate detailed prompt using Gemini 2.5 Flash (skip if directPrompt provided)
+    if (!directPrompt) {
+      const promptGenerationRequest = `Create a detailed, descriptive prompt for generating a background image for a form.
 
 Form title: "${title}"
 ${description ? `Form description: "${description}"` : ''}
@@ -44,43 +49,43 @@ Generate a detailed, vivid prompt that describes the background image. The promp
 
 Respond with ONLY the image generation prompt, nothing else.`;
 
-    const textGenResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptGenerationRequest }] }],
-        }),
+      const textGenResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptGenerationRequest }] }],
+          }),
+        }
+      );
+
+      if (!textGenResponse.ok) {
+        const errorData = await textGenResponse.json().catch(() => ({}));
+        console.error('Prompt generation error:', textGenResponse.status, errorData);
+        return res.status(textGenResponse.status).json({
+          error: errorData.error?.message || `Prompt generation failed: ${textGenResponse.status}`,
+        });
       }
-    );
 
-    if (!textGenResponse.ok) {
-      const errorData = await textGenResponse.json().catch(() => ({}));
-      console.error('Prompt generation error:', textGenResponse.status, errorData);
-      return res.status(textGenResponse.status).json({
-        error: errorData.error?.message || `Prompt generation failed: ${textGenResponse.status}`,
-      });
-    }
+      const textGenData = await textGenResponse.json();
 
-    const textGenData = await textGenResponse.json();
-
-    // Extract generated prompt
-    let generatedPrompt = '';
-    if (textGenData.candidates && textGenData.candidates.length > 0) {
-      const parts = textGenData.candidates[0].content?.parts || [];
-      for (const part of parts) {
-        if (part.text) {
-          generatedPrompt = part.text.trim();
-          break;
+      // Extract generated prompt
+      if (textGenData.candidates && textGenData.candidates.length > 0) {
+        const parts = textGenData.candidates[0].content?.parts || [];
+        for (const part of parts) {
+          if (part.text) {
+            generatedPrompt = part.text.trim();
+            break;
+          }
         }
       }
-    }
 
-    if (!generatedPrompt) {
-      return res.status(500).json({ error: 'Failed to generate prompt' });
+      if (!generatedPrompt) {
+        return res.status(500).json({ error: 'Failed to generate prompt' });
+      }
     }
 
     // Step 2: Generate image using Gemini 2.5 Flash Image

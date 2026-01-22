@@ -116,3 +116,57 @@ export async function generateBackgroundImage(
     };
   }
 }
+
+/**
+ * Regenerates a background image using a direct prompt (skips text generation)
+ * This is used when the user edits the prompt and wants to try again
+ */
+export async function regenerateImageFromPrompt(
+  prompt: string
+): Promise<{ imageUrl: string | null; error: string | null }> {
+  try {
+    const response = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || `API error: ${response.status}`;
+      return {
+        imageUrl: null,
+        error: errorMessage,
+      };
+    }
+
+    const data = await response.json();
+
+    if (data.imageUrl) {
+      return {
+        imageUrl: data.imageUrl,
+        error: null,
+      };
+    } else if (data.error) {
+      return {
+        imageUrl: null,
+        error: data.error,
+      };
+    }
+
+    return {
+      imageUrl: null,
+      error: 'No image was generated',
+    };
+  } catch (error) {
+    console.error('Failed to regenerate image:', error);
+    return {
+      imageUrl: null,
+      error: error instanceof Error ? error.message : 'Failed to regenerate image',
+    };
+  }
+}

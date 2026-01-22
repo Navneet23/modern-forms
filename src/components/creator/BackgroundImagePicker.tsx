@@ -1,7 +1,38 @@
 import { useState, useCallback } from 'react';
 import { BACKGROUND_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
-import { generateBackgroundImage, IMAGE_STYLES, type ImageStyle } from '../../utils/aiImageGeneration';
+import { generateBackgroundImage, regenerateImageFromPrompt, IMAGE_STYLES, type ImageStyle } from '../../utils/aiImageGeneration';
 import type { ThemeColors } from '../../types/theme';
+
+// Shimmer animation component for AI generation loading state
+function PromptShimmer() {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <div className="h-3 w-3 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 animate-pulse" />
+        <span className="text-xs text-gray-500 font-medium">Generating prompt...</span>
+      </div>
+      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div className="space-y-2">
+          <div className="h-3 bg-gray-200 rounded w-full shimmer-line" />
+          <div className="h-3 bg-gray-200 rounded w-11/12 shimmer-line" style={{ animationDelay: '0.1s' }} />
+          <div className="h-3 bg-gray-200 rounded w-4/5 shimmer-line" style={{ animationDelay: '0.2s' }} />
+          <div className="h-3 bg-gray-200 rounded w-3/4 shimmer-line" style={{ animationDelay: '0.3s' }} />
+        </div>
+        <style>{`
+          .shimmer-line {
+            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+          }
+          @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
 
 interface BackgroundImagePickerProps {
   currentImageUrl?: string;
@@ -23,16 +54,18 @@ export function BackgroundImagePicker({
   const [activeTab, setActiveTab] = useState<TabType>('browse');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('artistic');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
-  const [showPrompt, setShowPrompt] = useState(false);
+  const [editedPrompt, setEditedPrompt] = useState<string>('');
 
   // Handle AI image generation
   const handleGenerateWithAI = useCallback(async () => {
     setIsGeneratingAI(true);
     setAiError(null);
     setGeneratedPrompt(null);
+    setEditedPrompt('');
 
     try {
       const { imageUrl, generatedPrompt: prompt, error } = await generateBackgroundImage(
@@ -44,7 +77,7 @@ export function BackgroundImagePicker({
 
       if (prompt) {
         setGeneratedPrompt(prompt);
-        setShowPrompt(true);
+        setEditedPrompt(prompt);
       }
 
       if (error) {
@@ -58,6 +91,28 @@ export function BackgroundImagePicker({
       setIsGeneratingAI(false);
     }
   }, [formTitle, formDescription, themeColors, selectedStyle, onImageSelect]);
+
+  // Handle regenerating image with edited prompt
+  const handleTryAgain = useCallback(async () => {
+    if (!editedPrompt.trim()) return;
+
+    setIsRegenerating(true);
+    setAiError(null);
+
+    try {
+      const { imageUrl, error } = await regenerateImageFromPrompt(editedPrompt);
+
+      if (error) {
+        setAiError(error);
+      } else if (imageUrl) {
+        onImageSelect(imageUrl);
+      }
+    } catch (err) {
+      setAiError('Failed to regenerate image. Please try again.');
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [editedPrompt, onImageSelect]);
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,28 +240,52 @@ export function BackgroundImagePicker({
         </p>
       )}
 
-      {/* Generated Prompt Display */}
+      {/* Shimmer animation during prompt generation */}
+      {isGeneratingAI && !generatedPrompt && (
+        <PromptShimmer />
+      )}
+
+      {/* Editable Prompt with Try Again */}
       {generatedPrompt && (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
+          <label className="text-xs text-gray-500 font-medium">AI Generated Prompt</label>
+          <textarea
+            value={editedPrompt}
+            onChange={(e) => setEditedPrompt(e.target.value)}
+            disabled={isRegenerating}
+            className="w-full px-3 py-2 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            rows={4}
+            placeholder="Edit the prompt to regenerate..."
+          />
           <button
-            onClick={() => setShowPrompt(!showPrompt)}
-            className="flex items-center justify-between w-full text-xs text-gray-500 hover:text-gray-700"
+            onClick={handleTryAgain}
+            disabled={isRegenerating || !editedPrompt.trim()}
+            className={`
+              w-full py-2 px-4 rounded-lg font-medium text-xs transition-all
+              flex items-center justify-center gap-2
+              ${isRegenerating || !editedPrompt.trim()
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-800 text-white hover:bg-gray-900'
+              }
+            `}
           >
-            <span className="font-medium">AI Generated Prompt</span>
-            <svg
-              className={`w-4 h-4 transition-transform ${showPrompt ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            {isRegenerating ? (
+              <>
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Regenerating...
+              </>
+            ) : (
+              <>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Try Again
+              </>
+            )}
           </button>
-          {showPrompt && (
-            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200 max-h-24 overflow-y-auto">
-              {generatedPrompt}
-            </div>
-          )}
         </div>
       )}
 
