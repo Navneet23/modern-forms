@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ParsedForm, LayoutMode, FormConfig } from '../../types/form';
 import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
@@ -32,6 +32,31 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
 
   // UI state
   const [copySuccess, setCopySuccess] = useState(false);
+
+  // Ref for the preview scroll container
+  const previewScrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll preview based on layout type
+  useEffect(() => {
+    const scrollContainer = previewScrollRef.current;
+    if (!scrollContainer) return;
+
+    // Small delay to ensure content is rendered
+    const timeoutId = setTimeout(() => {
+      if (activeLayout === 'standard') {
+        // Standard layout: scroll to top
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Question by Question layout: scroll to middle
+        const scrollHeight = scrollContainer.scrollHeight;
+        const clientHeight = scrollContainer.clientHeight;
+        const middlePosition = (scrollHeight - clientHeight) / 2;
+        scrollContainer.scrollTo({ top: middlePosition, behavior: 'smooth' });
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeLayout, previewMode]);
 
   // Handle theme selection - preserve user's background effect, use theme's background image
   const handleSelectTheme = useCallback((theme: ThemeConfig) => {
@@ -267,7 +292,7 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
                 borderRadius: '36px',
               } : undefined}
             >
-              <div className="w-full h-full overflow-auto">
+              <div ref={previewScrollRef} className="w-full h-full overflow-auto">
                 <PreviewContent
                   form={form}
                   theme={currentTheme}
