@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { BACKGROUND_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
-import { generateBackgroundImage } from '../../utils/aiImageGeneration';
+import { generateBackgroundImage, IMAGE_STYLES, type ImageStyle } from '../../utils/aiImageGeneration';
 import type { ThemeColors } from '../../types/theme';
 
 interface BackgroundImagePickerProps {
@@ -24,18 +24,28 @@ export function BackgroundImagePicker({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('artistic');
+  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   // Handle AI image generation
   const handleGenerateWithAI = useCallback(async () => {
     setIsGeneratingAI(true);
     setAiError(null);
+    setGeneratedPrompt(null);
 
     try {
-      const { imageUrl, error } = await generateBackgroundImage(
+      const { imageUrl, generatedPrompt: prompt, error } = await generateBackgroundImage(
         formTitle,
         formDescription,
-        themeColors
+        themeColors,
+        selectedStyle
       );
+
+      if (prompt) {
+        setGeneratedPrompt(prompt);
+        setShowPrompt(true);
+      }
 
       if (error) {
         setAiError(error);
@@ -47,7 +57,7 @@ export function BackgroundImagePicker({
     } finally {
       setIsGeneratingAI(false);
     }
-  }, [formTitle, formDescription, themeColors, onImageSelect]);
+  }, [formTitle, formDescription, themeColors, selectedStyle, onImageSelect]);
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,11 +158,56 @@ export function BackgroundImagePicker({
         )}
       </button>
 
+      {/* AI Style Selector */}
+      <div className="space-y-1.5">
+        <label className="text-xs text-gray-500 font-medium">Image Style</label>
+        <select
+          value={selectedStyle}
+          onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
+          disabled={isGeneratingAI}
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {IMAGE_STYLES.map((style) => (
+            <option key={style.id} value={style.id}>
+              {style.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-400">
+          {IMAGE_STYLES.find(s => s.id === selectedStyle)?.description}
+        </p>
+      </div>
+
       {/* AI Error Message */}
       {aiError && (
         <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
           {aiError}
         </p>
+      )}
+
+      {/* Generated Prompt Display */}
+      {generatedPrompt && (
+        <div className="space-y-1.5">
+          <button
+            onClick={() => setShowPrompt(!showPrompt)}
+            className="flex items-center justify-between w-full text-xs text-gray-500 hover:text-gray-700"
+          >
+            <span className="font-medium">AI Generated Prompt</span>
+            <svg
+              className={`w-4 h-4 transition-transform ${showPrompt ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showPrompt && (
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200 max-h-24 overflow-y-auto">
+              {generatedPrompt}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Tabs */}

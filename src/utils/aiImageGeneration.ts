@@ -1,33 +1,62 @@
 import type { ThemeColors } from '../types/theme';
 
 /**
- * Builds an optimized prompt for AI image generation based on form context and theme colors
+ * Available image generation styles
  */
-export function buildImagePrompt(
-  title: string,
-  description: string | undefined,
-  colors: ThemeColors
-): string {
-  const formContext = description
-    ? `${title}. ${description}`
-    : title;
+export type ImageStyle = 'abstract' | 'professional' | 'artistic' | 'animated' | 'watercolor' | 'cyberpunk';
 
-  return `Abstract background image for a form about: ${formContext}.
-Color palette: primary ${colors.primary}, surface ${colors.surface}, secondary ${colors.secondary}.
-Style: modern, professional, subtle gradient, suitable as form background.
-No text, no faces, abstract patterns or soft gradients.`;
+export interface ImageStyleOption {
+  id: ImageStyle;
+  name: string;
+  description: string;
 }
 
+export const IMAGE_STYLES: ImageStyleOption[] = [
+  {
+    id: 'abstract',
+    name: 'Abstract',
+    description: 'Geometric shapes, modern patterns, clean lines',
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'Clean, corporate feel, subtle textures, business-appropriate',
+  },
+  {
+    id: 'artistic',
+    name: 'Artistic',
+    description: 'Bold brushstrokes, paint textures, expressive feel',
+  },
+  {
+    id: 'animated',
+    name: 'Animated',
+    description: 'Cartoon-like, vibrant colors, playful illustration style',
+  },
+  {
+    id: 'watercolor',
+    name: 'Watercolor',
+    description: 'Soft watercolor painting, flowing colors, organic textures',
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Cyberpunk',
+    description: 'Neon colors, futuristic tech aesthetic, dark with glowing elements',
+  },
+];
+
 /**
- * Generates a background image using Google AI Studio (Imagen)
- * This calls our serverless API endpoint which securely handles the API key
+ * Generates a background image using Google AI Studio (Gemini)
+ * This calls our serverless API endpoint which:
+ * 1. Uses Gemini 2.5 Flash to generate a detailed prompt
+ * 2. Uses Gemini 2.5 Flash Image to generate the image
  */
 export async function generateBackgroundImage(
   title: string,
   description: string | undefined,
-  colors: ThemeColors
-): Promise<{ imageUrl: string | null; error: string | null }> {
-  const prompt = buildImagePrompt(title, description, colors);
+  colors: ThemeColors,
+  style: ImageStyle = 'artistic'
+): Promise<{ imageUrl: string | null; generatedPrompt: string | null; error: string | null }> {
+  const styleOption = IMAGE_STYLES.find(s => s.id === style) || IMAGE_STYLES[0];
 
   try {
     const response = await fetch('/api/generate-image', {
@@ -35,28 +64,54 @@ export async function generateBackgroundImage(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({
+        title,
+        description,
+        colors: {
+          primary: colors.primary,
+          secondary: colors.secondary,
+          surface: colors.surface,
+        },
+        style: `${styleOption.name} - ${styleOption.description}`,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.error || `API error: ${response.status}`;
-      return { imageUrl: null, error: errorMessage };
+      return {
+        imageUrl: null,
+        generatedPrompt: errorData.generatedPrompt || null,
+        error: errorMessage,
+      };
     }
 
     const data = await response.json();
 
     if (data.imageUrl) {
-      return { imageUrl: data.imageUrl, error: null };
+      return {
+        imageUrl: data.imageUrl,
+        generatedPrompt: data.generatedPrompt || null,
+        error: null,
+      };
     } else if (data.error) {
-      return { imageUrl: null, error: data.error };
+      return {
+        imageUrl: null,
+        generatedPrompt: data.generatedPrompt || null,
+        error: data.error,
+      };
     }
 
-    return { imageUrl: null, error: 'No image was generated' };
+    return {
+      imageUrl: null,
+      generatedPrompt: null,
+      error: 'No image was generated',
+    };
   } catch (error) {
     console.error('Failed to generate image:', error);
     return {
       imageUrl: null,
+      generatedPrompt: null,
       error: error instanceof Error ? error.message : 'Failed to generate image',
     };
   }
