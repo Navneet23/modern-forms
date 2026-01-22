@@ -24,7 +24,7 @@ export function BackgroundImagePicker({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('abstract');
+  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('artistic');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 

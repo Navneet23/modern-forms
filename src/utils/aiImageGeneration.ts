@@ -54,7 +54,7 @@ export async function generateBackgroundImage(
   title: string,
   description: string | undefined,
   colors: ThemeColors,
-  style: ImageStyle = 'abstract'
+  style: ImageStyle = 'artistic'
 ): Promise<{ imageUrl: string | null; generatedPrompt: string | null; error: string | null }> {
   const styleOption = IMAGE_STYLES.find(s => s.id === style) || IMAGE_STYLES[0];
 
