@@ -18,8 +18,11 @@ interface CreatorStudioProps {
 type PreviewMode = 'desktop' | 'mobile';
 
 export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
-  // Single shared theme state across layouts
-  const [currentTheme, setCurrentTheme] = useState<ThemeConfig>(defaultTheme);
+  // Single shared theme state across layouts - default to 'shapes' background effect
+  const [currentTheme, setCurrentTheme] = useState<ThemeConfig>({
+    ...defaultTheme,
+    backgroundEffect: 'shapes',
+  });
 
   // Current layout being edited
   const [activeLayout, setActiveLayout] = useState<LayoutMode>('standard');
@@ -30,9 +33,13 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
   // UI state
   const [copySuccess, setCopySuccess] = useState(false);
 
-  // Handle theme selection
+  // Handle theme selection - preserve user's background effect, use theme's background image
   const handleSelectTheme = useCallback((theme: ThemeConfig) => {
-    setCurrentTheme(theme);
+    setCurrentTheme((prev) => ({
+      ...theme,
+      backgroundEffect: prev.backgroundEffect,
+      backgroundImageUrl: theme.backgroundImageUrl, // Use theme's image or undefined
+    }));
   }, [setCurrentTheme]);
 
   // Handle color customization

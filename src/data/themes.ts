@@ -260,7 +260,7 @@ export const presetThemes: ThemeConfig[] = [
   },
 ];
 
-export const defaultTheme = presetThemes[0]; // Clean Slate
+export const defaultTheme = presetThemes.find(t => t.id === 'lavender-dreams') || presetThemes[0];
 
 export function getThemeById(id: string): ThemeConfig | undefined {
   return presetThemes.find((theme) => theme.id === id);
