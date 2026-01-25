@@ -15,6 +15,12 @@ import { StandardLayout, QuestionByQuestionLayout } from './components/layouts';
 
 type AppView = 'input' | 'creator' | 'respond';
 
+// Check if URL has form data parameters (checked synchronously to avoid flash)
+function hasFormDataInUrl(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return params.has('d') || params.has('f');
+}
+
 function App() {
   const [view, setView] = useState<AppView>('input');
   const [parsedForm, setParsedForm] = useState<ParsedForm | null>(null);
@@ -22,7 +28,8 @@ function App() {
   const [originalFormUrl, setOriginalFormUrl] = useState<string>('');
   const [sharedTheme, setSharedTheme] = useState<ThemeConfig | null>(null);
   const [sharedLayoutMode, setSharedLayoutMode] = useState<LayoutMode | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // Start with loading if URL has form data, to prevent homepage flash
+  const [isLoading, setIsLoading] = useState(hasFormDataInUrl);
   const [error, setError] = useState('');
 
   // Check URL for form data on mount
@@ -77,6 +84,7 @@ function App() {
         return;
       } else {
         setError('Form link is invalid or has expired (links expire after 7 days).');
+        setIsLoading(false);
         return;
       }
     }
@@ -92,6 +100,7 @@ function App() {
       } else {
         setError('Form not found. Legacy links may no longer work.');
       }
+      setIsLoading(false);
     }
   }, []);
 
@@ -166,6 +175,36 @@ function App() {
         originalFormUrl={originalFormUrl}
         onBack={handleBack}
       />
+    );
+  }
+
+  // Loading screen for shared form links
+  if (isLoading && view === 'input') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <svg
+            className="w-12 h-12 text-primary-500 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          <p className="text-lg text-gray-600 font-medium">Loading form...</p>
+        </div>
+      </div>
     );
   }
 
