@@ -177,28 +177,23 @@ export async function submitFormResponse(
   submitUrl: string,
   responses: { [entryId: string]: string | string[] }
 ): Promise<boolean> {
-  const formData = new FormData();
-
-  Object.entries(responses).forEach(([entryId, value]) => {
-    if (Array.isArray(value)) {
-      value.forEach((v) => formData.append(entryId, v));
-    } else {
-      formData.append(entryId, value);
-    }
-  });
-
   try {
     // Submit via proxy - extract the path from the full Google Forms URL
     const formPath = submitUrl.replace('https://docs.google.com/forms/', '');
     const proxyUrl = `/api/proxy?url=${encodeURIComponent(formPath)}`;
-    await fetch(proxyUrl, {
+
+    // Send as JSON - the proxy will convert to URL-encoded form data
+    const response = await fetch(proxyUrl, {
       method: 'POST',
-      body: formData,
-      mode: 'no-cors', // Google Forms doesn't return CORS headers
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(responses),
     });
 
-    // Since no-cors doesn't give us the response, we assume success
-    return true;
+    // Check if the response indicates success
+    // Google Forms redirects to a confirmation page on success
+    return response.ok || response.status === 200;
   } catch (error) {
     console.error('Failed to submit form:', error);
     return false;

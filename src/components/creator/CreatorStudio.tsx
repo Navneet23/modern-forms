@@ -1,23 +1,24 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { ParsedForm, LayoutMode, FormConfig } from '../../types/form';
+import type { ParsedForm, LayoutMode } from '../../types/form';
 import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
 import { BackgroundImagePicker } from './BackgroundImagePicker';
 import { BackgroundEffectPicker } from './BackgroundEffectPicker';
-import { saveFormConfig } from '../../utils/storage';
+import { createShareableUrl } from '../../utils/urlSharing';
 import { StandardLayout } from '../layouts/StandardLayout';
 import { QuestionByQuestionLayout } from '../layouts/QuestionByQuestionLayout';
 
 interface CreatorStudioProps {
   form: ParsedForm;
+  originalFormUrl: string;
   onBack: () => void;
 }
 
 type PreviewMode = 'desktop' | 'mobile';
 
-export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
+export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioProps) {
   // Single shared theme state across layouts - default to 'shapes' background effect
   const [currentTheme, setCurrentTheme] = useState<ThemeConfig>({
     ...defaultTheme,
@@ -97,30 +98,15 @@ export function CreatorStudio({ form, onBack }: CreatorStudioProps) {
     }));
   }, [setCurrentTheme]);
 
-  // Handle create & copy
+  // Handle create & copy - uses URL-based sharing (no localStorage)
   const handleCreateAndCopy = useCallback(() => {
-    const config: FormConfig = {
-      formId: form.id,
-      parsedForm: form,
-      layoutMode: activeLayout,
-      headerImageUrl: currentTheme.headerImageUrl,
-      createdAt: Date.now(),
-    };
-
-    // Add theme data to config (we'll need to extend FormConfig type)
-    const extendedConfig = {
-      ...config,
-      theme: currentTheme,
-    };
-
-    const id = saveFormConfig(extendedConfig as FormConfig);
-    const url = `${window.location.origin}${window.location.pathname}?f=${id}`;
+    const url = createShareableUrl(originalFormUrl, activeLayout, currentTheme);
 
     navigator.clipboard.writeText(url).then(() => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 3000);
     });
-  }, [form, activeLayout, currentTheme]);
+  }, [originalFormUrl, activeLayout, currentTheme]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
