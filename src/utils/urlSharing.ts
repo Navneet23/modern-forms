@@ -42,6 +42,13 @@ export interface ShareableFormConfig {
 }
 
 /**
+ * Checks if a URL is a base64 data URL (which would be too large to include in shareable URLs)
+ */
+export function isBase64DataUrl(url: string | undefined): boolean {
+  return !!url && url.startsWith('data:');
+}
+
+/**
  * Encodes a form configuration into a URL-safe compressed string
  */
 export function encodeFormConfig(
@@ -49,6 +56,12 @@ export function encodeFormConfig(
   layoutMode: LayoutMode,
   theme: ThemeConfig
 ): string {
+  // Don't include base64 data URLs in shareable links - they're too large
+  // Only include external URLs (https://, http://)
+  const backgroundImageUrl = theme.backgroundImageUrl && !isBase64DataUrl(theme.backgroundImageUrl)
+    ? theme.backgroundImageUrl
+    : undefined;
+
   const config: ShareableFormConfig = {
     u: googleFormUrl,
     l: layoutMode === 'standard' ? 's' : 'q',
@@ -66,7 +79,7 @@ export function encodeFormConfig(
         su: theme.colors.success,
       },
       r: theme.borderRadius,
-      bi: theme.backgroundImageUrl,
+      bi: backgroundImageUrl,
       be: theme.backgroundEffect,
     },
     ts: Date.now(),
