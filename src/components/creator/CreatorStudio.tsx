@@ -6,7 +6,7 @@ import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
 import { BackgroundImagePicker } from './BackgroundImagePicker';
 import { BackgroundEffectPicker } from './BackgroundEffectPicker';
-import { createShareableUrl } from '../../utils/urlSharing';
+import { createShareableUrl, isBase64DataUrl } from '../../utils/urlSharing';
 import { StandardLayout } from '../layouts/StandardLayout';
 import { QuestionByQuestionLayout } from '../layouts/QuestionByQuestionLayout';
 
@@ -33,6 +33,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // UI state
   const [copySuccess, setCopySuccess] = useState(false);
+  const [imageWarning, setImageWarning] = useState(false);
 
   // Ref for the preview scroll container
   const previewScrollRef = useRef<HTMLDivElement>(null);
@@ -100,10 +101,18 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // Handle create & copy - uses URL-based sharing (no localStorage)
   const handleCreateAndCopy = useCallback(() => {
+    // Check if the background image is a base64 data URL (AI-generated or uploaded)
+    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl);
+
     const url = createShareableUrl(originalFormUrl, activeLayout, currentTheme);
 
     navigator.clipboard.writeText(url).then(() => {
       setCopySuccess(true);
+      // Show warning if base64 image won't be included in shared link
+      if (hasBase64Image) {
+        setImageWarning(true);
+        setTimeout(() => setImageWarning(false), 5000);
+      }
       setTimeout(() => setCopySuccess(false), 3000);
     });
   }, [originalFormUrl, activeLayout, currentTheme]);
@@ -153,6 +162,19 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
           )}
         </button>
       </header>
+
+      {/* Warning toast for AI/uploaded images not included in shared link */}
+      {imageWarning && (
+        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-50 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg shadow-lg flex items-start gap-3 max-w-md">
+          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div className="text-sm">
+            <p className="font-medium">Background image not included</p>
+            <p className="mt-1 text-amber-700">AI-generated and uploaded images cannot be shared via URL. Recipients will see the background effect instead.</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}

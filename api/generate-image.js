@@ -1,3 +1,5 @@
+import { put } from '@vercel/blob';
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -123,11 +125,36 @@ Respond with ONLY the image generation prompt, nothing else.`;
       for (const part of parts) {
         if (part.inlineData && part.inlineData.data) {
           const mimeType = part.inlineData.mimeType || 'image/png';
-          const imageUrl = `data:${mimeType};base64,${part.inlineData.data}`;
-          return res.status(200).json({
-            imageUrl,
-            generatedPrompt,
-          });
+          const base64Data = part.inlineData.data;
+
+          // Convert base64 to Buffer for upload
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+
+          // Generate a unique filename
+          const extension = mimeType.split('/')[1] || 'png';
+          const filename = `ai-background-${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
+
+          // Upload to Vercel Blob
+          try {
+            const blob = await put(filename, imageBuffer, {
+              access: 'public',
+              contentType: mimeType,
+            });
+
+            return res.status(200).json({
+              imageUrl: blob.url,
+              generatedPrompt,
+            });
+          } catch (uploadError) {
+            console.error('Blob upload error:', uploadError);
+            // Fallback to base64 if blob upload fails (e.g., in local dev without token)
+            const imageUrl = `data:${mimeType};base64,${base64Data}`;
+            return res.status(200).json({
+              imageUrl,
+              generatedPrompt,
+              warning: 'Image stored as base64 - may not work in shared links',
+            });
+          }
         }
       }
     }
