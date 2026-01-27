@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react';
 import { BACKGROUND_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
-import { generateBackgroundImage, regenerateImageFromPrompt, IMAGE_STYLES, type ImageStyle } from '../../utils/aiImageGeneration';
+import {
+  generateContextualImage,
+  regenerateContextualImageFromPrompt,
+  CONTEXTUAL_IMAGE_STYLES,
+  type ContextualImageStyle,
+} from '../../utils/contextualImageGeneration';
 import type { ThemeColors } from '../../types/theme';
 
 interface ContextualImagePickerProps {
@@ -25,7 +30,7 @@ export function ContextualImagePicker({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('artistic');
+  const [selectedStyle, setSelectedStyle] = useState<ContextualImageStyle>('brand-hero');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [editedPrompt, setEditedPrompt] = useState<string>('');
 
@@ -37,7 +42,7 @@ export function ContextualImagePicker({
     setEditedPrompt('');
 
     try {
-      const { imageUrl, generatedPrompt: prompt, error } = await generateBackgroundImage(
+      const { imageUrl, generatedPrompt: prompt, error } = await generateContextualImage(
         formTitle,
         formDescription,
         themeColors,
@@ -69,7 +74,7 @@ export function ContextualImagePicker({
     setAiError(null);
 
     try {
-      const { imageUrl, error } = await regenerateImageFromPrompt(editedPrompt);
+      const { imageUrl, error } = await regenerateContextualImageFromPrompt(editedPrompt);
 
       if (error) {
         setAiError(error);
@@ -189,16 +194,19 @@ export function ContextualImagePicker({
         <label className="text-xs text-gray-500 font-medium">Image Style</label>
         <select
           value={selectedStyle}
-          onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
+          onChange={(e) => setSelectedStyle(e.target.value as ContextualImageStyle)}
           disabled={isGeneratingAI}
           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {IMAGE_STYLES.map((style) => (
+          {CONTEXTUAL_IMAGE_STYLES.map((style) => (
             <option key={style.id} value={style.id}>
               {style.name}
             </option>
           ))}
         </select>
+        <p className="text-xs text-gray-400">
+          {CONTEXTUAL_IMAGE_STYLES.find(s => s.id === selectedStyle)?.description}
+        </p>
       </div>
 
       {/* AI Error Message */}

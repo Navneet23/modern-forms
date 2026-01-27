@@ -235,7 +235,7 @@ export function ImmersiveQuestionLayout({
   // Welcome Screen - Split layout
   if (viewState === 'welcome') {
     return (
-      <div className={`${isPreview ? 'h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
         {/* Left Panel - Content */}
         <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative">
           <BackgroundLayers />
@@ -298,7 +298,7 @@ export function ImmersiveQuestionLayout({
   // Success Screen - Split layout
   if (viewState === 'success') {
     return (
-      <div className={`${isPreview ? 'h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
         {/* Left Panel - Content */}
         <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative">
           <BackgroundLayers />
@@ -345,7 +345,7 @@ export function ImmersiveQuestionLayout({
   // Review Screen - Split layout
   if (viewState === 'review') {
     return (
-      <div className={`${isPreview ? 'h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
         {/* Left Panel - Content */}
         <div className="flex-1 relative overflow-auto">
           <BackgroundLayers />

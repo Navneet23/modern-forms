@@ -225,8 +225,16 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                 </button>
               </div>
 
-              {/* Q-by-Q Style Toggle */}
-              {activeLayout === 'question-by-question' && (
+              {/* Q-by-Q Style Toggle with Accordion Animation */}
+              <div
+                className={`
+                  overflow-hidden transition-all duration-500 ease-in-out
+                  ${activeLayout === 'question-by-question'
+                    ? 'max-h-24 opacity-100'
+                    : 'max-h-0 opacity-0'
+                  }
+                `}
+              >
                 <div className="space-y-2 pt-2">
                   <label className="text-xs text-gray-500 font-medium">Style</label>
                   <div className="flex gap-2">
@@ -256,7 +264,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Theme Selector */}
@@ -384,6 +392,8 @@ interface PreviewContentProps {
 }
 
 function PreviewContent({ form, theme, layout, qbyqStyle }: PreviewContentProps) {
+  const isImmersive = layout === 'question-by-question' && qbyqStyle === 'immersive';
+
   const style = {
     '--theme-primary': theme.colors.primary,
     '--theme-secondary': theme.colors.secondary,
@@ -397,7 +407,7 @@ function PreviewContent({ form, theme, layout, qbyqStyle }: PreviewContentProps)
   } as React.CSSProperties;
 
   return (
-    <div style={style}>
+    <div style={style} className={isImmersive ? 'h-full' : ''}>
       {layout === 'standard' ? (
         <StandardLayout
           form={form}
