@@ -22,6 +22,7 @@ export interface ThemeConfig {
   headerImageUrl?: string;
   backgroundImageUrl?: string;
   backgroundEffect?: BackgroundEffect;
+  contextualImageUrl?: string; // Used in Q-by-Q Immersive layout
 }
 
 export const borderRadiusValues = {

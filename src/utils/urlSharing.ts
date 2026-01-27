@@ -1,6 +1,6 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 import type { ThemeConfig, BackgroundEffect } from '../types/theme';
-import type { LayoutMode } from '../types/form';
+import type { LayoutMode, QbyQStyle } from '../types/form';
 
 /**
  * Minimal shareable form configuration
@@ -14,6 +14,8 @@ export interface ShareableFormConfig {
   u: string;
   // Layout mode: 's' = standard, 'q' = question-by-question
   l: 's' | 'q';
+  // Q-by-Q style: 'c' = classic, 'i' = immersive (only used when l='q')
+  qs?: 'c' | 'i';
   // Theme (using short keys to minimize size)
   t: {
     // Theme ID (to restore preset themes)
@@ -36,6 +38,8 @@ export interface ShareableFormConfig {
     bi?: string;
     // Background effect
     be?: BackgroundEffect;
+    // Contextual image URL (for immersive layout)
+    ci?: string;
   };
   // Created timestamp (for 7-day expiry check)
   ts: number;
@@ -54,7 +58,8 @@ export function isBase64DataUrl(url: string | undefined): boolean {
 export function encodeFormConfig(
   googleFormUrl: string,
   layoutMode: LayoutMode,
-  theme: ThemeConfig
+  theme: ThemeConfig,
+  qbyqStyle: QbyQStyle = 'classic'
 ): string {
   // Don't include base64 data URLs in shareable links - they're too large
   // Only include external URLs (https://, http://)
@@ -62,9 +67,14 @@ export function encodeFormConfig(
     ? theme.backgroundImageUrl
     : undefined;
 
+  const contextualImageUrl = theme.contextualImageUrl && !isBase64DataUrl(theme.contextualImageUrl)
+    ? theme.contextualImageUrl
+    : undefined;
+
   const config: ShareableFormConfig = {
     u: googleFormUrl,
     l: layoutMode === 'standard' ? 's' : 'q',
+    qs: layoutMode === 'question-by-question' ? (qbyqStyle === 'classic' ? 'c' : 'i') : undefined,
     t: {
       i: theme.id,
       c: {
@@ -81,6 +91,7 @@ export function encodeFormConfig(
       r: theme.borderRadius,
       bi: backgroundImageUrl,
       be: theme.backgroundEffect,
+      ci: contextualImageUrl,
     },
     ts: Date.now(),
   };
@@ -88,6 +99,8 @@ export function encodeFormConfig(
   // Remove undefined values to minimize size
   if (!config.t.bi) delete config.t.bi;
   if (!config.t.be) delete config.t.be;
+  if (!config.t.ci) delete config.t.ci;
+  if (!config.qs) delete config.qs;
 
   const jsonString = JSON.stringify(config);
   return compressToEncodedURIComponent(jsonString);
@@ -157,7 +170,15 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
     fontFamily: 'Inter, system-ui, sans-serif',
     backgroundImageUrl: t.bi,
     backgroundEffect: t.be,
+    contextualImageUrl: t.ci,
   };
+}
+
+/**
+ * Converts Q-by-Q style from shareable format
+ */
+export function shareableToQbyQStyle(shareable: ShareableFormConfig): QbyQStyle {
+  return shareable.qs === 'i' ? 'immersive' : 'classic';
 }
 
 /**
@@ -173,9 +194,10 @@ export function shareableToLayoutMode(shareable: ShareableFormConfig): LayoutMod
 export function createShareableUrl(
   googleFormUrl: string,
   layoutMode: LayoutMode,
-  theme: ThemeConfig
+  theme: ThemeConfig,
+  qbyqStyle: QbyQStyle = 'classic'
 ): string {
-  const encoded = encodeFormConfig(googleFormUrl, layoutMode, theme);
+  const encoded = encodeFormConfig(googleFormUrl, layoutMode, theme, qbyqStyle);
   return `${window.location.origin}${window.location.pathname}?d=${encoded}`;
 }
 

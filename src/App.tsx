@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ParsedForm, FormConfig, LayoutMode } from './types/form';
+import type { ParsedForm, FormConfig, LayoutMode, QbyQStyle } from './types/form';
 import type { ThemeConfig } from './types/theme';
 import { defaultTheme } from './data/themes';
 import { fetchGoogleForm, parseGoogleFormHtml } from './utils/formParser';
@@ -9,9 +9,10 @@ import {
   decodeFormConfig,
   shareableToThemeConfig,
   shareableToLayoutMode,
+  shareableToQbyQStyle,
 } from './utils/urlSharing';
 import { FormUrlInput, CreatorStudio } from './components/creator';
-import { StandardLayout, QuestionByQuestionLayout } from './components/layouts';
+import { StandardLayout, QuestionByQuestionLayout, ImmersiveQuestionLayout } from './components/layouts';
 
 type AppView = 'input' | 'creator' | 'respond';
 
@@ -28,6 +29,7 @@ function App() {
   const [originalFormUrl, setOriginalFormUrl] = useState<string>('');
   const [sharedTheme, setSharedTheme] = useState<ThemeConfig | null>(null);
   const [sharedLayoutMode, setSharedLayoutMode] = useState<LayoutMode | null>(null);
+  const [sharedQbyQStyle, setSharedQbyQStyle] = useState<QbyQStyle | null>(null);
   // Start with loading if URL has form data, to prevent homepage flash
   const [isLoading, setIsLoading] = useState(hasFormDataInUrl);
   const [error, setError] = useState('');
@@ -72,6 +74,7 @@ function App() {
             setOriginalFormUrl(sharedConfig.u);
             setSharedTheme(shareableToThemeConfig(sharedConfig));
             setSharedLayoutMode(shareableToLayoutMode(sharedConfig));
+            setSharedQbyQStyle(shareableToQbyQStyle(sharedConfig));
             setView('respond');
           })
           .catch(err => {
@@ -137,6 +140,7 @@ function App() {
     setOriginalFormUrl('');
     setSharedTheme(null);
     setSharedLayoutMode(null);
+    setSharedQbyQStyle(null);
     setError('');
     setView('input');
 
@@ -150,15 +154,31 @@ function App() {
     // Use shared theme/layout from URL, or fall back to legacy formConfig, or defaults
     const theme = sharedTheme || (formConfig?.theme as ThemeConfig) || defaultTheme;
     const layoutMode = sharedLayoutMode || formConfig?.layoutMode || 'standard';
+    const qbyqStyle = sharedQbyQStyle || formConfig?.qbyqStyle || 'classic';
     const headerImageUrl = formConfig?.headerImageUrl;
 
-    return layoutMode === 'standard' ? (
-      <StandardLayout
-        form={parsedForm}
-        theme={theme}
-        headerImageUrl={headerImageUrl}
-      />
-    ) : (
+    if (layoutMode === 'standard') {
+      return (
+        <StandardLayout
+          form={parsedForm}
+          theme={theme}
+          headerImageUrl={headerImageUrl}
+        />
+      );
+    }
+
+    // Q-by-Q layout - check style
+    if (qbyqStyle === 'immersive') {
+      return (
+        <ImmersiveQuestionLayout
+          form={parsedForm}
+          theme={theme}
+          headerImageUrl={headerImageUrl}
+        />
+      );
+    }
+
+    return (
       <QuestionByQuestionLayout
         form={parsedForm}
         theme={theme}

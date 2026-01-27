@@ -5,3 +5,4 @@ export { CreatorStudio } from './CreatorStudio';
 export { ThemeSelector } from './ThemeSelector';
 export { ColorCustomizer } from './ColorCustomizer';
 export { BackgroundImagePicker } from './BackgroundImagePicker';
+export { ContextualImagePicker } from './ContextualImagePicker';

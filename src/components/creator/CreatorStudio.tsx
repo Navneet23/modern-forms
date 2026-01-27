@@ -1,14 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { ParsedForm, LayoutMode } from '../../types/form';
+import type { ParsedForm, LayoutMode, QbyQStyle } from '../../types/form';
 import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
 import { BackgroundImagePicker } from './BackgroundImagePicker';
 import { BackgroundEffectPicker } from './BackgroundEffectPicker';
+import { ContextualImagePicker } from './ContextualImagePicker';
 import { createShareableUrl, isBase64DataUrl } from '../../utils/urlSharing';
 import { StandardLayout } from '../layouts/StandardLayout';
 import { QuestionByQuestionLayout } from '../layouts/QuestionByQuestionLayout';
+import { ImmersiveQuestionLayout } from '../layouts/ImmersiveQuestionLayout';
 
 interface CreatorStudioProps {
   form: ParsedForm;
@@ -27,6 +29,9 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // Current layout being edited
   const [activeLayout, setActiveLayout] = useState<LayoutMode>('standard');
+
+  // Q-by-Q style (classic or immersive)
+  const [qbyqStyle, setQbyqStyle] = useState<QbyQStyle>('classic');
 
   // Preview mode
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
@@ -99,12 +104,22 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
     }));
   }, [setCurrentTheme]);
 
+  // Handle contextual image change (for immersive layout)
+  const handleContextualImageChange = useCallback((url: string | undefined) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      contextualImageUrl: url,
+    }));
+  }, [setCurrentTheme]);
+
   // Handle create & copy - uses URL-based sharing (no localStorage)
   const handleCreateAndCopy = useCallback(() => {
-    // Check if the background image is a base64 data URL (AI-generated or uploaded)
-    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl);
+    // Check if any image is a base64 data URL (AI-generated or uploaded)
+    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl) ||
+                           isBase64DataUrl(currentTheme.contextualImageUrl);
 
-    const url = createShareableUrl(originalFormUrl, activeLayout, currentTheme);
+    const url = createShareableUrl(originalFormUrl, activeLayout, currentTheme, qbyqStyle);
 
     navigator.clipboard.writeText(url).then(() => {
       setCopySuccess(true);
@@ -115,7 +130,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
       }
       setTimeout(() => setCopySuccess(false), 3000);
     });
-  }, [originalFormUrl, activeLayout, currentTheme]);
+  }, [originalFormUrl, activeLayout, currentTheme, qbyqStyle]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
@@ -209,6 +224,39 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   Q by Q
                 </button>
               </div>
+
+              {/* Q-by-Q Style Toggle */}
+              {activeLayout === 'question-by-question' && (
+                <div className="space-y-2 pt-2">
+                  <label className="text-xs text-gray-500 font-medium">Style</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setQbyqStyle('classic')}
+                      className={`
+                        flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all
+                        ${qbyqStyle === 'classic'
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }
+                      `}
+                    >
+                      Classic
+                    </button>
+                    <button
+                      onClick={() => setQbyqStyle('immersive')}
+                      className={`
+                        flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-all
+                        ${qbyqStyle === 'immersive'
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }
+                      `}
+                    >
+                      Immersive
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Theme Selector */}
@@ -225,6 +273,17 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               formDescription={form.description}
               themeColors={currentTheme.colors}
             />
+
+            {/* Contextual Image Picker (Immersive layout only) */}
+            {activeLayout === 'question-by-question' && qbyqStyle === 'immersive' && (
+              <ContextualImagePicker
+                currentImageUrl={currentTheme.contextualImageUrl}
+                onImageSelect={handleContextualImageChange}
+                formTitle={form.title}
+                formDescription={form.description}
+                themeColors={currentTheme.colors}
+              />
+            )}
 
             {/* Color Customizer */}
             <ColorCustomizer
@@ -305,6 +364,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   form={form}
                   theme={currentTheme}
                   layout={activeLayout}
+                  qbyqStyle={qbyqStyle}
                 />
               </div>
             </div>
@@ -320,9 +380,10 @@ interface PreviewContentProps {
   form: ParsedForm;
   theme: ThemeConfig;
   layout: LayoutMode;
+  qbyqStyle: QbyQStyle;
 }
 
-function PreviewContent({ form, theme, layout }: PreviewContentProps) {
+function PreviewContent({ form, theme, layout, qbyqStyle }: PreviewContentProps) {
   const style = {
     '--theme-primary': theme.colors.primary,
     '--theme-secondary': theme.colors.secondary,
@@ -339,6 +400,12 @@ function PreviewContent({ form, theme, layout }: PreviewContentProps) {
     <div style={style}>
       {layout === 'standard' ? (
         <StandardLayout
+          form={form}
+          theme={theme}
+          isPreview
+        />
+      ) : qbyqStyle === 'immersive' ? (
+        <ImmersiveQuestionLayout
           form={form}
           theme={theme}
           isPreview

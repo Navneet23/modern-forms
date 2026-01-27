@@ -53,10 +53,13 @@ export interface FormResponse {
 
 export type LayoutMode = 'standard' | 'question-by-question';
 
+export type QbyQStyle = 'classic' | 'immersive';
+
 export interface FormConfig {
   formId: string;
   parsedForm: ParsedForm;
   layoutMode: LayoutMode;
+  qbyqStyle?: QbyQStyle; // Style for Q-by-Q layout: 'classic' or 'immersive'
   headerImageUrl?: string;
   createdAt: number;
   // Theme configuration (shared across layouts)
