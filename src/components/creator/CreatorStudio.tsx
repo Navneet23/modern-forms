@@ -373,6 +373,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   theme={currentTheme}
                   layout={activeLayout}
                   qbyqStyle={qbyqStyle}
+                  previewMode={previewMode}
                 />
               </div>
             </div>
@@ -389,9 +390,10 @@ interface PreviewContentProps {
   theme: ThemeConfig;
   layout: LayoutMode;
   qbyqStyle: QbyQStyle;
+  previewMode: PreviewMode;
 }
 
-function PreviewContent({ form, theme, layout, qbyqStyle }: PreviewContentProps) {
+function PreviewContent({ form, theme, layout, qbyqStyle, previewMode }: PreviewContentProps) {
   const isImmersive = layout === 'question-by-question' && qbyqStyle === 'immersive';
 
   const style = {
@@ -419,6 +421,7 @@ function PreviewContent({ form, theme, layout, qbyqStyle }: PreviewContentProps)
           form={form}
           theme={theme}
           isPreview
+          isMobilePreview={previewMode === 'mobile'}
         />
       ) : (
         <QuestionByQuestionLayout

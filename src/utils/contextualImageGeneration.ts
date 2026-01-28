@@ -33,54 +33,66 @@ export const CONTEXTUAL_IMAGE_STYLES: ContextualImageStyleOption[] = [
 /**
  * Get the prompt context for each style
  */
-function getStylePromptContext(style: ContextualImageStyle, formTitle: string, formDescription?: string): string {
+function getStylePromptContext(
+  style: ContextualImageStyle,
+  formTitle: string,
+  formDescription?: string,
+  colors?: { primary?: string; secondary?: string }
+): string {
   const formContext = formDescription
     ? `Form: "${formTitle}" - ${formDescription}`
     : `Form: "${formTitle}"`;
 
+  const colorContext = colors?.primary && colors?.secondary
+    ? `\n\nIMPORTANT - Use these exact brand colors prominently in the image:
+- Primary color: ${colors.primary}
+- Secondary color: ${colors.secondary}
+These colors should be dominant in the composition, appearing in gradients, shapes, lighting, or key visual elements.`
+    : '';
+
   switch (style) {
     case 'brand-hero':
       return `Create a professional, high-end brand hero image for a business form.
-${formContext}
+${formContext}${colorContext}
 
 The image should:
 - Feel premium and corporate, like a Fortune 500 company website hero
 - Use clean, modern design with subtle abstract geometric elements
-- Include soft gradients, light rays, or glass-morphism effects
+- Include soft gradients, light rays, or glass-morphism effects using the brand colors
 - Convey professionalism, trust, and innovation
 - NOT include any text, logos, faces, or specific brand elements
 - Be suitable as a side panel image for a form interface
-- Use a sophisticated color palette that complements business contexts`;
+- Incorporate the brand colors as the dominant color scheme`;
 
     case 'topic-illustration':
       return `Create an illustrative image that represents the topic and purpose of this form.
-${formContext}
+${formContext}${colorContext}
 
 The image should:
 - Visually represent what the form is about (e.g., job application = office/workspace, feedback = communication/collaboration)
-- Use a modern illustration style with clean shapes and appealing colors
+- Use a modern illustration style with clean shapes incorporating the brand colors
 - Feel welcoming and approachable
 - Include relevant symbolic elements related to the form's purpose
 - NOT include any text, specific faces, or brand logos
 - Work well as a side panel image that provides context
-- Use colors that feel professional yet friendly`;
+- Use the brand colors as the primary color palette for the illustration`;
 
     case 'lifestyle':
       return `Create an aspirational lifestyle image that evokes positive emotions for form respondents.
-${formContext}
+${formContext}${colorContext}
 
 The image should:
 - Show abstract representations of people or human elements (silhouettes, hands, gestures)
 - Convey warmth, connection, achievement, or collaboration
 - Feel inspirational and motivating
-- Use soft, warm lighting and natural tones
+- Use the brand colors in lighting, tints, or accent elements
 - NOT include recognizable faces or specific individuals
 - Be suitable as a side panel image that encourages form completion
-- Evoke feelings of success, belonging, or positive outcomes`;
+- Evoke feelings of success, belonging, or positive outcomes with brand color accents`;
 
     default:
       return `Create a professional image for a form interface.
-${formContext}
+${formContext}${colorContext}
 
 The image should be high-quality, professional, and suitable as a side panel image.`;
   }
@@ -96,7 +108,10 @@ export async function generateContextualImage(
   colors: ThemeColors,
   style: ContextualImageStyle = 'brand-hero'
 ): Promise<{ imageUrl: string | null; generatedPrompt: string | null; error: string | null }> {
-  const stylePromptContext = getStylePromptContext(style, title, description);
+  const stylePromptContext = getStylePromptContext(style, title, description, {
+    primary: colors.primary,
+    secondary: colors.secondary,
+  });
 
   try {
     const response = await fetch('/api/generate-contextual-image', {

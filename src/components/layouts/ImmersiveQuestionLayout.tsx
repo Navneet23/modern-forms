@@ -12,6 +12,7 @@ interface ImmersiveQuestionLayoutProps {
   theme?: ThemeConfig;
   headerImageUrl?: string;
   isPreview?: boolean;
+  isMobilePreview?: boolean;
   onSubmitSuccess?: () => void;
 }
 
@@ -22,6 +23,7 @@ export function ImmersiveQuestionLayout({
   theme = defaultTheme,
   headerImageUrl,
   isPreview,
+  isMobilePreview,
   onSubmitSuccess,
 }: ImmersiveQuestionLayoutProps) {
   const [viewState, setViewState] = useState<ViewState>('welcome');
@@ -280,8 +282,8 @@ export function ImmersiveQuestionLayout({
           </div>
         </div>
 
-        {/* Right Panel - Contextual Image (Desktop only) */}
-        {contextualImageUrl && (
+        {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
+        {contextualImageUrl && !isMobilePreview && (
           <div className="hidden lg:block lg:w-1/2 relative">
             <img
               src={contextualImageUrl}
@@ -327,8 +329,8 @@ export function ImmersiveQuestionLayout({
           </div>
         </div>
 
-        {/* Right Panel - Contextual Image (Desktop only) */}
-        {contextualImageUrl && (
+        {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
+        {contextualImageUrl && !isMobilePreview && (
           <div className="hidden lg:block lg:w-1/2 relative">
             <img
               src={contextualImageUrl}
@@ -431,8 +433,8 @@ export function ImmersiveQuestionLayout({
           </div>
         </div>
 
-        {/* Right Panel - Contextual Image (Desktop only) */}
-        {contextualImageUrl && (
+        {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
+        {contextualImageUrl && !isMobilePreview && (
           <div className="hidden lg:block lg:w-1/2 relative">
             <img
               src={contextualImageUrl}
@@ -547,8 +549,8 @@ export function ImmersiveQuestionLayout({
         </div>
       </div>
 
-      {/* Right Panel - Contextual Image (Desktop only) */}
-      {contextualImageUrl && (
+      {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
+      {contextualImageUrl && !isMobilePreview && (
         <div className="hidden lg:block lg:w-1/2 relative">
           <img
             src={contextualImageUrl}
@@ -571,8 +573,8 @@ export function ImmersiveQuestionLayout({
         </div>
       )}
 
-      {/* Fallback: No contextual image - show gradient panel on desktop */}
-      {!contextualImageUrl && (
+      {/* Fallback: No contextual image - show gradient panel on desktop (hidden in mobile preview) */}
+      {!contextualImageUrl && !isMobilePreview && (
         <div className="hidden lg:block lg:w-1/2 relative" style={{ backgroundColor: theme.colors.primary + '10' }}>
           <div
             className="absolute inset-0"
