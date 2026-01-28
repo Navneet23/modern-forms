@@ -1,227 +1,208 @@
-# Immersive Layout Requirements
+# Immersive Layout Feature
 
 ## Overview
 
-Add a new "Immersive" style option under the Question-by-Question (Q by Q) layout. This creates a split-screen experience with a contextual image panel, providing a more visually engaging form experience.
+The Immersive Layout is a new style option under the Question-by-Question (Q by Q) layout that creates a split-screen experience with a contextual image panel, providing a more visually engaging form experience.
+
+---
+
+## Feature Summary
+
+When users select the "Q by Q" layout in Creator Studio, they can choose between two styles:
+
+| Style | Description |
+|-------|-------------|
+| **Classic** | Original centered card layout |
+| **Immersive** | Split-screen with contextual image on the right |
+
+---
+
+## Implementation Details
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/components/layouts/ImmersiveQuestionLayout.tsx` | Main split-screen layout component |
+| `src/components/creator/ContextualImagePicker.tsx` | Image picker for contextual images |
+| `src/utils/contextualImageGeneration.ts` | AI generation logic with brand-focused styles |
+| `api/generate-contextual-image.js` | API endpoint for contextual image generation |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/types/theme.ts` | Added `contextualImageUrl` field to `ThemeConfig` |
+| `src/types/form.ts` | Added `QbyQStyle` type (`'classic' \| 'immersive'`) |
+| `src/components/creator/CreatorStudio.tsx` | Added style toggle, accordion animation, contextual image picker integration |
+| `src/components/layouts/index.ts` | Export `ImmersiveQuestionLayout` |
+| `src/components/creator/index.ts` | Export `ContextualImagePicker` |
+| `src/utils/urlSharing.ts` | Added support for `contextualImageUrl` and `qbyqStyle` in URL encoding/decoding |
+| `src/App.tsx` | Added routing logic for immersive layout |
 
 ---
 
 ## Layout Structure
 
-### Q by Q Layout Options
-
-When user selects "Q by Q" layout, show two style options:
-
-| Style | Description |
-|-------|-------------|
-| **Classic** | Current centered card layout (existing behavior) |
-| **Immersive** | Split-screen layout with contextual image |
-
----
-
-## Immersive Layout - Desktop View
+### Desktop View (Split-Screen)
 
 ```
 ┌────────────────────────────────┬────────────────────────────────────────────┐
-│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│                                            │
-│░░░░░░░░ (background gradient) ░│                                            │
-│░░                            ░░│    ┌────────────────────────────────────┐  │
-│░░  ┌──────────────────────┐  ░░│    │                                    │  │
-│░░  │                      │  ░░│    │                                    │  │
-│░░  │  What is your        │  ░░│    │                                    │  │
-│░░  │  preferred work      │  ░░│    │        CONTEXTUAL IMAGE            │  │
-│░░  │  environment?        │  ░░│    │                                    │  │
-│░░  │                      │  ░░│    │       (AI-generated or             │  │
-│░░  │  ○ Remote            │  ░░│    │        curated visual)             │  │
-│░░  │  ○ Office            │  ░░│    │                                    │  │
-│░░  │  ○ Hybrid            │  ░░│    │                                    │  │
-│░░  │  ○ No preference     │  ░░│    │                                    │  │
-│░░  │                      │  ░░│    │                                    │  │
-│░░  │  ┌──────┐ ┌────────┐ │  ░░│    │                                    │  │
-│░░  │  │ Back │ │ Next → │ │  ░░│    └────────────────────────────────────┘  │
-│░░  │  └──────┘ └────────┘ │  ░░│                                            │
-│░░  └──────────────────────┘  ░░│    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   │
-│░░                            ░░│    Progress bar                            │
-│░░  ━━━━━━━━  Question 3/10   ░░│                                            │
-│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│                                            │
+│                                │                                            │
+│   Background gradient/image    │         Contextual Image                   │
+│                                │         (full-bleed)                       │
+│   ┌──────────────────────┐     │                                            │
+│   │                      │     │                                            │
+│   │   Question Card      │     │                                            │
+│   │   + Answer Options   │     │                                            │
+│   │   + Navigation       │     │                                            │
+│   │                      │     │                                            │
+│   └──────────────────────┘     │                                            │
+│                                │                                            │
+│   Progress: Question 3/10      │         Progress bar                       │
+│                                │                                            │
 └────────────────────────────────┴────────────────────────────────────────────┘
         LEFT PANEL (50%)                      RIGHT PANEL (50%)
 ```
 
-### Left Panel (50% width)
-- Background: Gradient or background effect (from theme)
-- Content: Question card with:
-  - Question text
-  - Answer options
-  - Navigation buttons (Back / Next)
-- Footer: Progress bar + question count (e.g., "Question 3/10")
+### Mobile View (No Split-Screen)
 
-### Right Panel (50% width)
-- Full-bleed contextual image
-- Image covers entire panel height
-- Progress bar at bottom
+- Progress bar at top
+- Question card centered
+- Background gradient/effect
+- **No contextual image** (hidden on mobile for usability)
 
 ---
 
-## Immersive Layout - Mobile View
+## Contextual Image Styles
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│  Progress bar (30%)                                    Question 3 of 10     │
-│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  │
-│  ░░                                                                      ░░ │
-│  ░░  ┌─────────────────────────────────────────────────────────────────┐ ░░ │
-│  ░░  │                                                                 │ ░░ │
-│  ░░  │  What is your preferred work environment?                       │ ░░ │
-│  ░░  │                                                                 │ ░░ │
-│  ░░  │  ○ Remote / Work from home                                      │ ░░ │
-│  ░░  │  ○ Office / In-person                                           │ ░░ │
-│  ░░  │  ○ Hybrid                                                       │ ░░ │
-│  ░░  │  ○ No preference                                                │ ░░ │
-│  ░░  │                                                                 │ ░░ │
-│  ░░  │  ┌─────────────┐           ┌─────────────┐                      │ ░░ │
-│  ░░  │  │   ← Back    │           │   Next →    │                      │ ░░ │
-│  ░░  │  └─────────────┘           └─────────────┘                      │ ░░ │
-│  ░░  └─────────────────────────────────────────────────────────────────┘ ░░ │
-│  ░░                                                                      ░░ │
-│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                        (No contextual image on mobile)
-```
+Unlike background images which use abstract/artistic styles, contextual images use brand-focused styles:
 
-### Mobile Behavior
-- **No contextual image** - only shown on desktop
-- Progress bar fixed at top with question count
-- Question card centered with gradient/effect background
-- Same experience as Classic layout on mobile
+| Style | Description | Use Case |
+|-------|-------------|----------|
+| **Brand / Hero** | Professional brand imagery with abstract elements, corporate feel | Company forms, professional surveys |
+| **Topic Illustration** | Illustrative imagery related to the form subject matter | Job applications, feedback forms |
+| **Lifestyle** | People-focused, aspirational imagery that evokes emotion | Customer surveys, engagement forms |
+
+### AI Prompt Generation
+
+Each style generates different prompts:
+
+- **Brand/Hero**: Focuses on premium corporate aesthetics, glass-morphism, geometric elements
+- **Topic Illustration**: Creates subject-relevant illustrations (e.g., office for job forms)
+- **Lifestyle**: Generates warm, human-centered imagery with silhouettes and gestures
 
 ---
 
-## Creator Studio UI Changes
+## Creator Studio UX
 
-### Layout Selector
+### Style Selection Animation
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│  Layout                                                               │
-│  ┌───────────────────────────┐  ┌───────────────────────────────┐     │
-│  │        Standard           │  │           Q by Q              │     │
-│  └───────────────────────────┘  └───────────────────────────────┘     │
-│                                              │                        │
-│                                              ▼                        │
-│                                 ┌─────────────────────────────┐       │
-│                                 │  Style                      │       │
-│                                 │  ┌─────────┐  ┌───────────┐ │       │
-│                                 │  │ Classic │  │ Immersive │ │       │
-│                                 │  └─────────┘  └───────────┘ │       │
-│                                 └─────────────────────────────┘       │
-└───────────────────────────────────────────────────────────────────────┘
-```
-
-- Style sub-options only appear when "Q by Q" is selected
-- Default style: Classic
+When user selects "Q by Q" layout:
+1. Style options (Classic/Immersive) unfold with **500ms accordion animation**
+2. Uses `max-height` and `opacity` CSS transitions
+3. Smooth, non-jarring experience
 
 ### Contextual Image Picker
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│  Contextual Image                                                     │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │ [Current contextual image preview]                    [Remove]  │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │ ✨ Generate with AI                                             │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-│  ┌──────────────┐ ┌──────────────┐                                    │
-│  │    Browse    │ │    Upload    │                                    │
-│  └──────────────┘ └──────────────┘                                    │
-│  [Gallery grid / Upload dropzone based on active tab]                 │
-└───────────────────────────────────────────────────────────────────────┘
-```
-
-- **Only visible when**: Q by Q layout + Immersive style is selected
-- **Features** (same as Background Image Picker):
-  - Generate with AI button
-  - Browse tab: Gallery of curated images
-  - Upload tab: Drag & drop or click to upload
-  - Preview of current selection
-  - Remove button
+Only visible when **Q by Q + Immersive** is selected:
+- "Generate with AI" button with style selector
+- Browse gallery tab
+- Upload custom image tab
+- Preview of current selection
+- Editable AI-generated prompt with "Try Again" option
 
 ---
 
-## Data Model Changes
+## Data Model
 
-### Theme Config
-
-Add new field to `ThemeConfig`:
+### ThemeConfig Addition
 
 ```typescript
 interface ThemeConfig {
   // ... existing fields
-  contextualImageUrl?: string;  // NEW: URL for immersive layout contextual image
+  contextualImageUrl?: string;  // URL for immersive layout contextual image
 }
 ```
 
-### Layout Mode
-
-Update `LayoutMode` type or add sub-type:
+### New Type
 
 ```typescript
-type LayoutMode = 'standard' | 'question-by-question';
-
-type QbyQStyle = 'classic' | 'immersive';  // NEW
+type QbyQStyle = 'classic' | 'immersive';
 ```
 
-### URL Sharing
-
-Update `ShareableFormConfig` to include:
+### URL Sharing Format
 
 ```typescript
 interface ShareableFormConfig {
   // ... existing fields
+  qs?: 'c' | 'i';  // Q-by-Q style: 'c' = classic, 'i' = immersive
   t: {
     // ... existing theme fields
-    ci?: string;  // NEW: contextual image URL
+    ci?: string;   // Contextual image URL
   };
-  qs?: 'c' | 'i';  // NEW: Q-by-Q style (classic/immersive)
 }
 ```
 
 ---
 
-## Implementation Checklist
+## API Endpoints
 
-### Phase 1: Core Layout
-- [ ] Create `ImmersiveQuestionLayout.tsx` component
-- [ ] Implement desktop split-screen view
-- [ ] Implement mobile fallback (no contextual image)
-- [ ] Add progress bar to both panels
-- [ ] Add slide animations between questions
+### `/api/generate-contextual-image`
 
-### Phase 2: Creator Studio UI
-- [ ] Add Q-by-Q style toggle (Classic / Immersive)
-- [ ] Create `ContextualImagePicker.tsx` component
-- [ ] Show/hide contextual image picker based on layout selection
-- [ ] Integrate AI image generation for contextual images
+**Method:** POST
 
-### Phase 3: Data & Sharing
-- [ ] Update `ThemeConfig` type with `contextualImageUrl`
-- [ ] Update URL encoding/decoding for contextual image
-- [ ] Update URL encoding/decoding for Q-by-Q style
-- [ ] Handle Vercel Blob upload for AI-generated contextual images
+**Request Body:**
+```json
+{
+  "title": "Form Title",
+  "description": "Form description",
+  "colors": {
+    "primary": "#4F46E5",
+    "secondary": "#7C3AED",
+    "surface": "#FFFFFF"
+  },
+  "styleContext": "...",  // Generated prompt context
+  "style": "brand-hero"   // brand-hero | topic-illustration | lifestyle
+}
+```
 
-### Phase 4: Polish
-- [ ] Add smooth transitions between Classic and Immersive preview
-- [ ] Ensure proper responsive breakpoints
-- [ ] Test all question types in immersive layout
-- [ ] Update tests for new layout option
+**Response:**
+```json
+{
+  "imageUrl": "https://blob.vercel-storage.com/...",
+  "generatedPrompt": "..."
+}
+```
 
 ---
 
-## Notes
+## Key Implementation Notes
 
-- Contextual image is **desktop-only** to maintain mobile usability
-- Reuse existing `BackgroundImagePicker` logic for contextual image picker
-- AI generation for contextual images uses same API as background images
-- Consider adding subtle parallax or fade effects to contextual image on scroll
+1. **Height Fix**: Immersive layout uses `min-h-full h-full` in preview mode to fill the container
+2. **PreviewContent Wrapper**: Added `h-full` class when displaying immersive layout
+3. **Fallback Panel**: When no contextual image is set, right panel shows a gradient based on theme colors
+4. **Progress Bar**: Shown on both panels (left panel full progress, right panel minimal white bar)
+5. **Responsive**: Uses `lg:` breakpoint for split-screen (hidden on mobile)
+
+---
+
+## Testing
+
+All 88 existing tests pass. The feature doesn't break any existing functionality.
+
+---
+
+## Commits
+
+1. **Initial Implementation** (`541f3f3`)
+   - Created ImmersiveQuestionLayout component
+   - Added Q-by-Q style toggle
+   - Created ContextualImagePicker
+   - Updated URL sharing
+
+2. **Fixes and Improvements** (`d0a139a`)
+   - Fixed 100% height issue in preview
+   - Added separate contextual image styles (Brand/Hero, Topic, Lifestyle)
+   - Created dedicated API endpoint for contextual images
+   - Added 500ms accordion animation for style options
