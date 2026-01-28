@@ -36,21 +36,32 @@ export default async function handler(req, res) {
 
     // Step 1: Generate detailed prompt using Gemini 2.5 Flash (skip if directPrompt provided)
     if (!directPrompt) {
-      const promptGenerationRequest = `You are an expert at creating image generation prompts for professional form interfaces.
+      const promptGenerationRequest = `You are an expert at writing image generation prompts that create visually compelling hero images.
 
+Your task: Write a prompt to create a visually appealing HERO IMAGE for a form that captures what the form is about.
+
+FORM DETAILS (this is what the image must represent):
+- Form Title: "${title}"
+${description ? `- Form Description: "${description}"` : ''}
+
+IMPORTANT: The hero image must visually communicate the form's purpose. Analyze the form title and description to understand:
+- What domain/topic is this form about? (e.g., hiring, feedback, events, healthcare, education)
+- What visual concepts, objects, or scenes represent this topic?
+- What would make someone immediately understand what this form is for just by seeing the image?
+
+STYLE GUIDANCE:
 ${styleContext}
 
-Additional context:
-- Form title: "${title}"
-${description ? `- Form description: "${description}"` : ''}
-- Color palette: primary ${colors?.primary || '#4F46E5'}, secondary ${colors?.secondary || '#7C3AED'}
+COLOR PALETTE (incorporate these brand colors prominently):
+- Primary: ${colors?.primary || '#4F46E5'}
+- Secondary: ${colors?.secondary || '#7C3AED'}
 
-Create a detailed, vivid image generation prompt that:
-1. Captures the essence of the style requested
-2. Specifies composition, lighting, mood, and visual elements
-3. Ensures the image will work well as a vertical side panel (portrait orientation preferred)
-4. Avoids any text, logos, or identifiable faces
-5. Creates a cohesive, professional look
+TECHNICAL REQUIREMENTS:
+- Portrait orientation (vertical side panel)
+- No text, logos, or identifiable faces
+- High-quality, professional look
+
+Write a detailed image generation prompt that creates a hero image directly representing the form's topic and purpose. The image should be a major attraction that draws users in.
 
 Respond with ONLY the image generation prompt, nothing else.`;
 
