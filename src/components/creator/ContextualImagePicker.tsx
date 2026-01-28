@@ -6,11 +6,63 @@ import {
   CONTEXTUAL_IMAGE_STYLES,
   type ContextualImageStyle,
 } from '../../utils/contextualImageGeneration';
-import type { ThemeColors } from '../../types/theme';
+import type { ThemeColors, ContextualImageCropSettings, ContextualImageCropShape } from '../../types/theme';
+import { ImageCropDialog } from './ImageCropDialog';
+
+// Shape options for cropping
+const CROP_SHAPES: { id: ContextualImageCropShape; name: string; icon: JSX.Element }[] = [
+  {
+    id: 'none',
+    name: 'None',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
+      </svg>
+    ),
+  },
+  {
+    id: 'oval',
+    name: 'Oval',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="12" rx="9" ry="7" strokeWidth={2} />
+      </svg>
+    ),
+  },
+  {
+    id: 'hexagon',
+    name: 'Hexagon',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <polygon points="12,2 22,8 22,16 12,22 2,16 2,8" strokeWidth={2} />
+      </svg>
+    ),
+  },
+  {
+    id: 'arch',
+    name: 'Arch',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M3 22 L3 8 Q3 2 12 2 Q21 2 21 8 L21 22" strokeWidth={2} />
+      </svg>
+    ),
+  },
+  {
+    id: 'blob',
+    name: 'Blob',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M18 3 Q22 3 22 8 L22 16 Q22 21 17 21 L9 21 Q3 21 3 15 L3 9 Q3 3 10 3 Z" strokeWidth={2} />
+      </svg>
+    ),
+  },
+];
 
 interface ContextualImagePickerProps {
   currentImageUrl?: string;
   onImageSelect: (url: string | undefined) => void;
+  cropSettings?: ContextualImageCropSettings;
+  onCropChange: (settings: ContextualImageCropSettings | undefined) => void;
   formTitle: string;
   formDescription?: string;
   themeColors: ThemeColors;
@@ -21,6 +73,8 @@ type TabType = 'browse' | 'upload';
 export function ContextualImagePicker({
   currentImageUrl,
   onImageSelect,
+  cropSettings,
+  onCropChange,
   formTitle,
   formDescription,
   themeColors,
@@ -33,6 +87,8 @@ export function ContextualImagePicker({
   const [selectedStyle, setSelectedStyle] = useState<ContextualImageStyle>('brand-hero');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [editedPrompt, setEditedPrompt] = useState<string>('');
+  const [showCropDialog, setShowCropDialog] = useState(false);
+  const [pendingCropShape, setPendingCropShape] = useState<ContextualImageCropShape | null>(null);
 
   // Handle AI image generation
   const handleGenerateWithAI = useCallback(async () => {
@@ -122,7 +178,34 @@ export function ContextualImagePicker({
   const handleRemoveImage = useCallback(() => {
     setUploadedImage(null);
     onImageSelect(undefined);
-  }, [onImageSelect]);
+    onCropChange(undefined);
+  }, [onImageSelect, onCropChange]);
+
+  // Handle shape selection
+  const handleShapeSelect = useCallback((shape: ContextualImageCropShape) => {
+    if (shape === 'none') {
+      onCropChange(undefined);
+    } else if (currentImageUrl) {
+      setPendingCropShape(shape);
+      setShowCropDialog(true);
+    }
+  }, [currentImageUrl, onCropChange]);
+
+  // Handle crop dialog confirm
+  const handleCropConfirm = useCallback((settings: ContextualImageCropSettings) => {
+    onCropChange(settings);
+    setShowCropDialog(false);
+    setPendingCropShape(null);
+  }, [onCropChange]);
+
+  // Handle crop dialog cancel
+  const handleCropCancel = useCallback(() => {
+    setShowCropDialog(false);
+    setPendingCropShape(null);
+  }, []);
+
+  // Get current shape
+  const currentShape = cropSettings?.shape || 'none';
 
   return (
     <div className="space-y-3">
@@ -155,6 +238,43 @@ export function ContextualImagePicker({
               Current
             </span>
           </div>
+        </div>
+      )}
+
+      {/* Crop Shape Selection - Only show when image is selected */}
+      {currentImageUrl && (
+        <div className="space-y-2">
+          <label className="text-xs text-gray-500 font-medium">Image Shape</label>
+          <div className="flex gap-1">
+            {CROP_SHAPES.map((shape) => (
+              <button
+                key={shape.id}
+                onClick={() => handleShapeSelect(shape.id)}
+                className={`
+                  flex-1 py-2 px-1 rounded-lg border-2 transition-all flex flex-col items-center gap-1
+                  ${currentShape === shape.id
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }
+                `}
+                title={shape.name}
+              >
+                {shape.icon}
+                <span className="text-[10px] font-medium">{shape.name}</span>
+              </button>
+            ))}
+          </div>
+          {currentShape !== 'none' && (
+            <button
+              onClick={() => {
+                setPendingCropShape(currentShape);
+                setShowCropDialog(true);
+              }}
+              className="w-full py-1.5 text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+            >
+              Adjust crop position
+            </button>
+          )}
         </div>
       )}
 
@@ -370,6 +490,17 @@ export function ContextualImagePicker({
           </div>
         )}
       </div>
+
+      {/* Crop Dialog */}
+      {showCropDialog && currentImageUrl && pendingCropShape && pendingCropShape !== 'none' && (
+        <ImageCropDialog
+          imageUrl={currentImageUrl}
+          shape={pendingCropShape}
+          initialSettings={cropSettings?.shape === pendingCropShape ? cropSettings : undefined}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   );
 }

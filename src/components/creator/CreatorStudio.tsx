@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ParsedForm, LayoutMode, QbyQStyle } from '../../types/form';
-import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
+import type { ThemeConfig, ThemeColors, BackgroundEffect, ContextualImageCropSettings } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
@@ -110,6 +110,15 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
       ...prev,
       id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
       contextualImageUrl: url,
+    }));
+  }, [setCurrentTheme]);
+
+  // Handle contextual image crop change
+  const handleContextualImageCropChange = useCallback((settings: ContextualImageCropSettings | undefined) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      contextualImageCrop: settings,
     }));
   }, [setCurrentTheme]);
 
@@ -287,6 +296,8 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               <ContextualImagePicker
                 currentImageUrl={currentTheme.contextualImageUrl}
                 onImageSelect={handleContextualImageChange}
+                cropSettings={currentTheme.contextualImageCrop}
+                onCropChange={handleContextualImageCropChange}
                 formTitle={form.title}
                 formDescription={form.description}
                 themeColors={currentTheme.colors}

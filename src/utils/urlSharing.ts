@@ -1,5 +1,5 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
-import type { ThemeConfig, BackgroundEffect } from '../types/theme';
+import type { ThemeConfig, BackgroundEffect, ContextualImageCropShape } from '../types/theme';
 import type { LayoutMode, QbyQStyle } from '../types/form';
 
 /**
@@ -40,6 +40,13 @@ export interface ShareableFormConfig {
     be?: BackgroundEffect;
     // Contextual image URL (for immersive layout)
     ci?: string;
+    // Contextual image crop settings
+    cc?: {
+      sh: ContextualImageCropShape; // shape
+      px: number; // position x
+      py: number; // position y
+      sc: number; // scale
+    };
   };
   // Created timestamp (for 7-day expiry check)
   ts: number;
@@ -71,6 +78,16 @@ export function encodeFormConfig(
     ? theme.contextualImageUrl
     : undefined;
 
+  // Prepare crop settings if present
+  const cropSettings = theme.contextualImageCrop && theme.contextualImageCrop.shape !== 'none'
+    ? {
+        sh: theme.contextualImageCrop.shape,
+        px: Math.round(theme.contextualImageCrop.position.x * 10) / 10, // Round to 1 decimal
+        py: Math.round(theme.contextualImageCrop.position.y * 10) / 10,
+        sc: Math.round(theme.contextualImageCrop.scale * 100) / 100, // Round to 2 decimals
+      }
+    : undefined;
+
   const config: ShareableFormConfig = {
     u: googleFormUrl,
     l: layoutMode === 'standard' ? 's' : 'q',
@@ -92,6 +109,7 @@ export function encodeFormConfig(
       bi: backgroundImageUrl,
       be: theme.backgroundEffect,
       ci: contextualImageUrl,
+      cc: cropSettings,
     },
     ts: Date.now(),
   };
@@ -100,6 +118,7 @@ export function encodeFormConfig(
   if (!config.t.bi) delete config.t.bi;
   if (!config.t.be) delete config.t.be;
   if (!config.t.ci) delete config.t.ci;
+  if (!config.t.cc) delete config.t.cc;
   if (!config.qs) delete config.qs;
 
   const jsonString = JSON.stringify(config);
@@ -171,6 +190,11 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
     backgroundImageUrl: t.bi,
     backgroundEffect: t.be,
     contextualImageUrl: t.ci,
+    contextualImageCrop: t.cc ? {
+      shape: t.cc.sh,
+      position: { x: t.cc.px, y: t.cc.py },
+      scale: t.cc.sc,
+    } : undefined,
   };
 }
 

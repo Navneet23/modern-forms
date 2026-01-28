@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ParsedForm, FormResponse } from '../../types/form';
-import type { ThemeConfig } from '../../types/theme';
+import type { ThemeConfig, ContextualImageCropShape } from '../../types/theme';
 import { isSingleSelectQuestion } from '../../types/form';
 import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
@@ -39,6 +39,7 @@ export function ImmersiveQuestionLayout({
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
   const hasBackgroundImage = !!theme.backgroundImageUrl;
   const contextualImageUrl = theme.contextualImageUrl;
+  const cropSettings = theme.contextualImageCrop;
 
   const currentQuestion = form.questions[currentIndex];
   const totalQuestions = form.questions.length;
@@ -66,6 +67,101 @@ export function ImmersiveQuestionLayout({
         secondaryColor={theme.colors.secondary}
         positionClass="absolute"
       />
+    );
+  };
+
+  // Shape clip paths for different crop shapes
+  const getShapeClipPath = (shape: ContextualImageCropShape): string => {
+    switch (shape) {
+      case 'oval':
+        return 'ellipse(45% 40% at 50% 50%)';
+      case 'hexagon':
+        return 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
+      case 'arch':
+        return 'path("M 0 100 L 0 25 Q 0 0 25 0 L 75 0 Q 100 0 100 25 L 100 100 Z")';
+      case 'blob':
+        return 'path("M 85 2 Q 100 2 100 20 L 100 80 Q 100 98 82 98 L 35 98 Q 2 98 2 75 L 2 30 Q 2 2 35 2 Z")';
+      default:
+        return 'none';
+    }
+  };
+
+  // Fixed layout positions for each shape
+  const getShapePosition = (shape: ContextualImageCropShape): React.CSSProperties => {
+    switch (shape) {
+      case 'oval':
+        return { top: '10%', left: '5%', right: '5%', bottom: '10%' };
+      case 'hexagon':
+        return { top: '15%', left: '10%', right: '10%', bottom: '15%' };
+      case 'arch':
+        return { top: '0', left: '5%', right: '5%', bottom: '5%' };
+      case 'blob':
+        return { top: '0', left: '0', right: '0', bottom: '0' };
+      default:
+        return { top: '0', left: '0', right: '0', bottom: '0' };
+    }
+  };
+
+  // Contextual Image Panel component with cropping support
+  const ContextualImagePanel = ({ showProgress = false }: { showProgress?: boolean }) => {
+    if (!contextualImageUrl || isMobilePreview) return null;
+
+    const hasCrop = cropSettings && cropSettings.shape !== 'none';
+
+    return (
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        {/* Background - theme gradient when cropped */}
+        {hasCrop && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%)`,
+            }}
+          />
+        )}
+
+        {/* Image container */}
+        {hasCrop && cropSettings ? (
+          <div
+            className="absolute"
+            style={{
+              ...getShapePosition(cropSettings.shape),
+              clipPath: getShapeClipPath(cropSettings.shape),
+            }}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${contextualImageUrl})`,
+                backgroundSize: `${100 / cropSettings.scale}%`,
+                backgroundPosition: `${cropSettings.position.x}% ${cropSettings.position.y}%`,
+              }}
+            />
+          </div>
+        ) : (
+          <img
+            src={contextualImageUrl}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Subtle overlay for non-cropped images */}
+        {!hasCrop && <div className="absolute inset-0 bg-black/5" aria-hidden="true" />}
+
+        {/* Progress indicator */}
+        {showProgress && (
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="h-1 rounded-full bg-white/30">
+              <div
+                className="h-full rounded-full transition-all duration-300 bg-white"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -283,16 +379,7 @@ export function ImmersiveQuestionLayout({
         </div>
 
         {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
-        {contextualImageUrl && !isMobilePreview && (
-          <div className="hidden lg:block lg:w-1/2 relative">
-            <img
-              src={contextualImageUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              aria-hidden="true"
-            />
-          </div>
-        )}
+        <ContextualImagePanel />
       </div>
     );
   }
@@ -330,16 +417,7 @@ export function ImmersiveQuestionLayout({
         </div>
 
         {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
-        {contextualImageUrl && !isMobilePreview && (
-          <div className="hidden lg:block lg:w-1/2 relative">
-            <img
-              src={contextualImageUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              aria-hidden="true"
-            />
-          </div>
-        )}
+        <ContextualImagePanel />
       </div>
     );
   }
@@ -434,19 +512,7 @@ export function ImmersiveQuestionLayout({
         </div>
 
         {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
-        {contextualImageUrl && !isMobilePreview && (
-          <div className="hidden lg:block lg:w-1/2 relative">
-            <img
-              src={contextualImageUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              aria-hidden="true"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <ProgressBar showQuestionCount={false} />
-            </div>
-          </div>
-        )}
+        <ContextualImagePanel showProgress />
       </div>
     );
   }
@@ -550,47 +616,28 @@ export function ImmersiveQuestionLayout({
       </div>
 
       {/* Right Panel - Contextual Image (Desktop only, hidden in mobile preview) */}
-      {contextualImageUrl && !isMobilePreview && (
-        <div className="hidden lg:block lg:w-1/2 relative">
-          <img
-            src={contextualImageUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            aria-hidden="true"
-          />
-          {/* Optional: subtle overlay for better contrast */}
-          <div className="absolute inset-0 bg-black/5" aria-hidden="true" />
-
-          {/* Progress indicator on image panel */}
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <div className="h-1 rounded-full bg-white/30">
-              <div
-                className="h-full rounded-full transition-all duration-300 bg-white"
-                style={{ width: `${progress}%` }}
-              />
+      {contextualImageUrl ? (
+        <ContextualImagePanel showProgress />
+      ) : (
+        /* Fallback: No contextual image - show gradient panel on desktop (hidden in mobile preview) */
+        !isMobilePreview && (
+          <div className="hidden lg:block lg:w-1/2 relative" style={{ backgroundColor: theme.colors.primary + '10' }}>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${theme.colors.primary}20 0%, ${theme.colors.secondary}20 100%)`,
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="h-1 rounded-full" style={{ backgroundColor: theme.colors.border }}>
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%`, backgroundColor: theme.colors.primary }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Fallback: No contextual image - show gradient panel on desktop (hidden in mobile preview) */}
-      {!contextualImageUrl && !isMobilePreview && (
-        <div className="hidden lg:block lg:w-1/2 relative" style={{ backgroundColor: theme.colors.primary + '10' }}>
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.primary}20 0%, ${theme.colors.secondary}20 100%)`,
-            }}
-          />
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <div className="h-1 rounded-full" style={{ backgroundColor: theme.colors.border }}>
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${progress}%`, backgroundColor: theme.colors.primary }}
-              />
-            </div>
-          </div>
-        </div>
+        )
       )}
     </div>
   );

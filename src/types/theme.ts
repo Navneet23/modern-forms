@@ -12,6 +12,14 @@ export interface ThemeColors {
 
 export type BackgroundEffect = 'solid' | 'textured' | 'shapes' | 'gradient';
 
+export type ContextualImageCropShape = 'none' | 'oval' | 'hexagon' | 'arch' | 'blob';
+
+export interface ContextualImageCropSettings {
+  shape: ContextualImageCropShape;
+  position: { x: number; y: number }; // Percentage 0-100, position of crop area on original image
+  scale: number; // Scale factor for the shape size (1 = default, 0.5 = half, 2 = double)
+}
+
 export interface ThemeConfig {
   id: string;
   name: string;
@@ -23,6 +31,7 @@ export interface ThemeConfig {
   backgroundImageUrl?: string;
   backgroundEffect?: BackgroundEffect;
   contextualImageUrl?: string; // Used in Q-by-Q Immersive layout
+  contextualImageCrop?: ContextualImageCropSettings; // Crop settings for contextual image
 }
 
 export const borderRadiusValues = {
