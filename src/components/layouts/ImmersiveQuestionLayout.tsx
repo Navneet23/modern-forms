@@ -110,15 +110,8 @@ export function ImmersiveQuestionLayout({
 
     return (
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* Background - theme gradient when cropped */}
-        {hasCrop && (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%)`,
-            }}
-          />
-        )}
+        {/* Background - matches theme background (gradient, effects, or image) when cropped */}
+        {hasCrop && <BackgroundLayers />}
 
         {/* Image container */}
         {hasCrop && cropSettings ? (
