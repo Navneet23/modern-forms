@@ -35,11 +35,28 @@ export function ImageCropDialog({
   onCancel,
 }: ImageCropDialogProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState(initialSettings?.position || { x: 50, y: 50 });
   const [scale, setScale] = useState(initialSettings?.scale || 1);
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
+  // Close on clicking outside the dialog
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (dialogRef.current && !dialogRef.current.contains(e.target as Node)) {
+      onCancel();
+    }
+  }, [onCancel]);
 
   // Handle mouse down on crop area
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -109,21 +126,38 @@ export function ImageCropDialog({
   const cropHeight = 70 * scale;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={handleBackdropClick}
+    >
+      <div
+        ref={dialogRef}
+        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col"
+      >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Adjust Crop Area</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Drag to position the crop area. Drag the corner to resize.
-          </p>
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Adjust Crop Area</h3>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Drag to position. Use slider to resize.
+            </p>
+          </div>
+          <button
+            onClick={onCancel}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+            aria-label="Close"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Image with crop overlay */}
-        <div className="p-6">
+        <div className="p-4 overflow-auto flex-1">
           <div
             ref={containerRef}
-            className="relative w-full aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden cursor-move"
+            className="relative w-full aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden cursor-move"
           >
             {/* Original image */}
             <img
@@ -219,7 +253,7 @@ export function ImageCropDialog({
               <div
                 className="resize-handle absolute bottom-1 right-1 w-6 h-6 bg-white rounded-full shadow-lg cursor-se-resize flex items-center justify-center"
               >
-                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 text-gray-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
               </div>
@@ -227,7 +261,7 @@ export function ImageCropDialog({
           </div>
 
           {/* Scale slider */}
-          <div className="mt-4">
+          <div className="mt-3">
             <label className="text-sm font-medium text-gray-700">Size</label>
             <input
               type="range"
@@ -236,7 +270,7 @@ export function ImageCropDialog({
               step="0.1"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-full mt-2"
+              className="w-full mt-1"
             />
             <div className="flex justify-between text-xs text-gray-500">
               <span>Small</span>
@@ -246,7 +280,7 @@ export function ImageCropDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
           <button
             onClick={onCancel}
             className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -255,9 +289,9 @@ export function ImageCropDialog({
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+            className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
           >
-            Apply Crop
+            Select
           </button>
         </div>
       </div>
