@@ -40,12 +40,13 @@ export function ImmersiveQuestionLayout({
   const hasBackgroundImage = !!theme.backgroundImageUrl;
   const contextualImageUrl = theme.contextualImageUrl;
   const cropSettings = theme.contextualImageCrop;
+  const hasCrop = cropSettings && cropSettings.shape !== 'none';
 
   const currentQuestion = form.questions[currentIndex];
   const totalQuestions = form.questions.length;
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
 
-  // Background layers for left panel
+  // Background layers - rendered at container level for continuous effect across panels
   const BackgroundLayers = () => {
     if (hasBackgroundImage) {
       return (
@@ -103,16 +104,12 @@ export function ImmersiveQuestionLayout({
   };
 
   // Contextual Image Panel component with cropping support
+  // Background is rendered at the container level for continuous effect, not inside this panel
   const ContextualImagePanel = ({ showProgress = false }: { showProgress?: boolean }) => {
     if (!contextualImageUrl || isMobilePreview) return null;
 
-    const hasCrop = cropSettings && cropSettings.shape !== 'none';
-
     return (
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* Background - matches theme background (gradient, effects, or image) when cropped */}
-        {hasCrop && <BackgroundLayers />}
-
         {/* Image container */}
         {hasCrop && cropSettings ? (
           <div
@@ -326,10 +323,12 @@ export function ImmersiveQuestionLayout({
   // Welcome Screen - Split layout
   if (viewState === 'welcome') {
     return (
-      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row relative`}>
+        {/* Continuous background spanning both panels */}
+        <BackgroundLayers />
+
         {/* Left Panel - Content */}
-        <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative">
-          <BackgroundLayers />
+        <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative z-10">
 
           <div className="max-w-md w-full relative z-10">
             {displayHeaderImage && (
@@ -380,10 +379,12 @@ export function ImmersiveQuestionLayout({
   // Success Screen - Split layout
   if (viewState === 'success') {
     return (
-      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row relative`}>
+        {/* Continuous background spanning both panels */}
+        <BackgroundLayers />
+
         {/* Left Panel - Content */}
-        <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative">
-          <BackgroundLayers />
+        <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative z-10">
 
           <div
             className="max-w-md w-full rounded-2xl shadow-lg p-8 text-center relative z-10"
@@ -418,10 +419,12 @@ export function ImmersiveQuestionLayout({
   // Review Screen - Split layout
   if (viewState === 'review') {
     return (
-      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+      <div className={`${isPreview ? 'min-h-full h-full' : 'min-h-screen'} flex flex-col lg:flex-row relative`}>
+        {/* Continuous background spanning both panels */}
+        <BackgroundLayers />
+
         {/* Left Panel - Content */}
-        <div className="flex-1 relative overflow-auto">
-          <BackgroundLayers />
+        <div className="flex-1 relative z-10 overflow-auto">
 
           <div className="relative z-10 p-6 lg:p-12">
             <div
@@ -512,7 +515,10 @@ export function ImmersiveQuestionLayout({
 
   // Questions Screen - Split layout on desktop, stacked on mobile
   return (
-    <div className={`${isPreview ? 'h-full' : 'min-h-screen'} flex flex-col lg:flex-row`}>
+    <div className={`${isPreview ? 'h-full' : 'min-h-screen'} flex flex-col lg:flex-row relative`}>
+      {/* Continuous background spanning both panels */}
+      <BackgroundLayers />
+
       {/* Mobile Progress Bar */}
       <div
         className="lg:hidden sticky top-0 z-20 p-4 shadow-sm"
@@ -522,8 +528,7 @@ export function ImmersiveQuestionLayout({
       </div>
 
       {/* Left Panel - Question Content */}
-      <div className="flex-1 flex flex-col relative">
-        <BackgroundLayers />
+      <div className="flex-1 flex flex-col relative z-10">
 
         <a href="#question-content" className="skip-link">
           Skip to question
