@@ -36,6 +36,8 @@ export interface ShareableFormConfig {
     bi?: string;
     // Background effect
     be?: BackgroundEffect;
+    // Font family
+    ff?: string;
   };
   // Created timestamp (for 7-day expiry check)
   ts: number;
@@ -81,6 +83,7 @@ export function encodeFormConfig(
       r: theme.borderRadius,
       bi: backgroundImageUrl,
       be: theme.backgroundEffect,
+      ff: theme.fontFamily,
     },
     ts: Date.now(),
   };
@@ -88,6 +91,7 @@ export function encodeFormConfig(
   // Remove undefined values to minimize size
   if (!config.t.bi) delete config.t.bi;
   if (!config.t.be) delete config.t.be;
+  if (!config.t.ff) delete config.t.ff;
 
   const jsonString = JSON.stringify(config);
   return compressToEncodedURIComponent(jsonString);
@@ -154,7 +158,7 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
       success: '#2E7D32',
     },
     borderRadius: t.r as ThemeConfig['borderRadius'],
-    fontFamily: 'Inter, system-ui, sans-serif',
+    fontFamily: t.ff || "'Inter', system-ui, sans-serif",
     backgroundImageUrl: t.bi,
     backgroundEffect: t.be,
   };

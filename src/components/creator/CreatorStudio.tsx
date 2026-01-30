@@ -38,6 +38,21 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
   // Ref for the preview scroll container
   const previewScrollRef = useRef<HTMLDivElement>(null);
 
+  // Dynamically load Google Font when font family changes
+  useEffect(() => {
+    const fontName = currentTheme.fontFamily.split(',')[0].replace(/'/g, '').trim();
+    if (!fontName || fontName === 'system-ui') return;
+
+    const linkId = `google-font-${fontName.replace(/\s+/g, '-')}`;
+    if (document.getElementById(linkId)) return;
+
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+    document.head.appendChild(link);
+  }, [currentTheme.fontFamily]);
+
   // Scroll preview based on layout type
   useEffect(() => {
     const scrollContainer = previewScrollRef.current;
@@ -87,6 +102,15 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
       ...prev,
       id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
       backgroundImageUrl: url,
+    }));
+  }, [setCurrentTheme]);
+
+  // Handle font family change
+  const handleFontFamilyChange = useCallback((fontFamily: string) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      fontFamily,
     }));
   }, [setCurrentTheme]);
 
@@ -209,6 +233,28 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   Q by Q
                 </button>
               </div>
+            </div>
+
+            {/* Font Picker */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700">Font</h3>
+              <select
+                value={currentTheme.fontFamily}
+                onChange={(e) => handleFontFamilyChange(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ fontFamily: currentTheme.fontFamily }}
+              >
+                <option value="'Inter', system-ui, sans-serif" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>Inter</option>
+                <option value="'Poppins', system-ui, sans-serif" style={{ fontFamily: "'Poppins', system-ui, sans-serif" }}>Poppins</option>
+                <option value="'Playfair Display', Georgia, serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Playfair Display</option>
+                <option value="'Roboto', system-ui, sans-serif" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>Roboto</option>
+                <option value="'Lora', Georgia, serif" style={{ fontFamily: "'Lora', Georgia, serif" }}>Lora</option>
+                <option value="'Montserrat', system-ui, sans-serif" style={{ fontFamily: "'Montserrat', system-ui, sans-serif" }}>Montserrat</option>
+                <option value="'Source Sans 3', system-ui, sans-serif" style={{ fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>Source Sans 3</option>
+                <option value="'Merriweather', Georgia, serif" style={{ fontFamily: "'Merriweather', Georgia, serif" }}>Merriweather</option>
+                <option value="'Raleway', system-ui, sans-serif" style={{ fontFamily: "'Raleway', system-ui, sans-serif" }}>Raleway</option>
+                <option value="'Nunito', system-ui, sans-serif" style={{ fontFamily: "'Nunito', system-ui, sans-serif" }}>Nunito</option>
+              </select>
             </div>
 
             {/* Theme Selector */}

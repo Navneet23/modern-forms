@@ -149,6 +149,19 @@ function App() {
   if (view === 'respond' && parsedForm) {
     // Use shared theme/layout from URL, or fall back to legacy formConfig, or defaults
     const theme = sharedTheme || (formConfig?.theme as ThemeConfig) || defaultTheme;
+
+    // Load Google Font for shared forms
+    const fontName = theme.fontFamily.split(',')[0].replace(/'/g, '').trim();
+    if (fontName && fontName !== 'system-ui') {
+      const linkId = `google-font-${fontName.replace(/\s+/g, '-')}`;
+      if (!document.getElementById(linkId)) {
+        const link = document.createElement('link');
+        link.id = linkId;
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+        document.head.appendChild(link);
+      }
+    }
     const layoutMode = sharedLayoutMode || formConfig?.layoutMode || 'standard';
     const headerImageUrl = formConfig?.headerImageUrl;
 

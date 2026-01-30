@@ -97,6 +97,31 @@ export function StandardLayout({
   // Use absolute positioning in preview mode to stay within container
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
+  // Blend primary and background colors for the title card
+  const blendColors = (hex1: string, hex2: string, weight: number): string => {
+    const h1 = hex1.replace('#', '');
+    const h2 = hex2.replace('#', '');
+    const r = Math.round(parseInt(h1.substring(0, 2), 16) * weight + parseInt(h2.substring(0, 2), 16) * (1 - weight));
+    const g = Math.round(parseInt(h1.substring(2, 4), 16) * weight + parseInt(h2.substring(2, 4), 16) * (1 - weight));
+    const b = Math.round(parseInt(h1.substring(4, 6), 16) * weight + parseInt(h2.substring(4, 6), 16) * (1 - weight));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
+
+  const titleCardBg = blendColors(theme.colors.primary, theme.colors.background, 0.55);
+
+  // Determine contrast text color for the title card
+  const getTitleTextColor = (bgHex: string): string => {
+    const hex = bgHex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    return luminance > 0.4 ? theme.colors.text : '#FFFFFF';
+  };
+
+  const titleTextColor = getTitleTextColor(titleCardBg);
+
   // Background layers component - handles both image and effect backgrounds
   const BackgroundLayers = () => {
     if (hasBackgroundImage) {
@@ -189,19 +214,19 @@ export function StandardLayout({
 
           <div
             className="rounded-2xl shadow-md p-6 sm:p-8"
-            style={{
-              backgroundColor: theme.colors.surface,
-              borderTop: `4px solid ${theme.colors.primary}`,
-            }}
+            style={{ backgroundColor: titleCardBg }}
           >
             <h1
-              className="text-2xl sm:text-3xl font-bold mb-2"
-              style={{ color: theme.colors.text }}
+              className="text-3xl sm:text-4xl font-bold mb-2"
+              style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
             >
               {form.title}
             </h1>
             {form.description && (
-              <p className="text-base sm:text-lg" style={{ color: theme.colors.textSecondary }}>
+              <p
+                className="text-base sm:text-lg"
+                style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+              >
                 {form.description}
               </p>
             )}
