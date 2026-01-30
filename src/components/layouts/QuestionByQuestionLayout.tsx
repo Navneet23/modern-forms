@@ -277,7 +277,7 @@ export function QuestionByQuestionLayout({
 
           <button
             onClick={() => setViewState('questions')}
-            className="px-8 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
+            className="px-16 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
             style={{ backgroundColor: theme.colors.primary }}
           >
             Start
@@ -454,8 +454,8 @@ export function QuestionByQuestionLayout({
       >
         <div className="max-w-xl w-full">
           <h1
-            className="text-3xl font-bold text-center mb-6"
-            style={{ color: theme.colors.text }}
+            className="text-5xl sm:text-6xl font-bold text-center mb-6"
+            style={{ color: welcomeTextColor }}
           >
             {form.title}
           </h1>
