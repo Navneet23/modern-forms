@@ -45,6 +45,19 @@ export function QuestionByQuestionLayout({
   // Use absolute positioning in preview mode to stay within container
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
+  // Determine if background is dark to choose contrasting text color
+  const getWelcomeTextColor = () => {
+    if (hasBackgroundImage) return '#FFFFFF';
+    const hex = theme.colors.background.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    return luminance > 0.5 ? theme.colors.primary : '#FFFFFF';
+  };
+  const welcomeTextColor = getWelcomeTextColor();
+
   // Background layers component - handles both image and effect backgrounds
   const BackgroundLayers = () => {
     if (hasBackgroundImage) {
@@ -231,43 +244,44 @@ export function QuestionByQuestionLayout({
       >
         <BackgroundLayers />
 
-        <div className="max-w-lg w-full relative z-10">
+        <div className="max-w-2xl w-full relative z-10 text-center">
           {displayHeaderImage && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
               <img src={displayHeaderImage} alt="" className="w-full h-48 object-cover" aria-hidden="true" />
             </div>
           )}
 
-          <div
-            className="rounded-2xl shadow-lg p-8 text-center"
-            style={{ backgroundColor: theme.colors.surface }}
+          <h1
+            className="text-5xl sm:text-6xl font-bold mb-6"
+            style={{ color: welcomeTextColor }}
           >
-            <h1
-              className="text-3xl font-bold mb-4"
-              style={{ color: theme.colors.text }}
+            {form.title}
+          </h1>
+          {form.description && (
+            <p
+              className="text-xl sm:text-2xl mb-8"
+              style={{ color: welcomeTextColor, opacity: 0.9 }}
             >
-              {form.title}
-            </h1>
-            {form.description && (
-              <p
-                className="text-lg mb-6"
-                style={{ color: theme.colors.textSecondary }}
-              >
-                {form.description}
-              </p>
-            )}
-            <p className="text-sm mb-8" style={{ color: theme.colors.textSecondary }}>
-              {totalQuestions} questions
+              {form.description}
             </p>
+          )}
 
-            <button
-              onClick={() => setViewState('questions')}
-              className="px-8 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
-              style={{ backgroundColor: theme.colors.primary }}
-            >
-              Start
-            </button>
-          </div>
+          <div
+            className="mx-auto mb-8 max-w-lg"
+            style={{ borderBottom: `1px solid ${welcomeTextColor}40` }}
+          />
+
+          <p className="text-sm mb-6" style={{ color: welcomeTextColor, opacity: 0.7 }}>
+            {totalQuestions} questions
+          </p>
+
+          <button
+            onClick={() => setViewState('questions')}
+            className="px-16 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
+            style={{ backgroundColor: theme.colors.primary }}
+          >
+            Start
+          </button>
         </div>
       </div>
     );
@@ -438,21 +452,28 @@ export function QuestionByQuestionLayout({
         id="question-content"
         className="flex-1 flex items-center justify-center px-4 pt-20 pb-24 relative z-10"
       >
-        <div
-          ref={questionRef}
-          className={`max-w-xl w-full rounded-2xl shadow-lg p-6 sm:p-8 ${
-            isAnimating
-              ? direction === 'forward'
-                ? 'slide-exit-active'
-                : 'slide-back-exit-active'
-              : direction === 'forward'
-              ? 'slide-enter-active'
-              : 'slide-back-enter-active'
-          }`}
-          style={{ backgroundColor: theme.colors.surface }}
-          role="region"
-          aria-label={`Question ${currentIndex + 1}: ${currentQuestion.title}`}
-        >
+        <div className="max-w-xl w-full">
+          <h1
+            className="text-5xl sm:text-6xl font-bold text-center mb-6"
+            style={{ color: welcomeTextColor }}
+          >
+            {form.title}
+          </h1>
+          <div
+            ref={questionRef}
+            className={`w-full rounded-2xl shadow-lg p-6 sm:p-8 ${
+              isAnimating
+                ? direction === 'forward'
+                  ? 'slide-exit-active'
+                  : 'slide-back-exit-active'
+                : direction === 'forward'
+                ? 'slide-enter-active'
+                : 'slide-back-enter-active'
+            }`}
+            style={{ backgroundColor: theme.colors.surface }}
+            role="region"
+            aria-label={`Question ${currentIndex + 1}: ${currentQuestion.title}`}
+          >
           <QuestionRenderer
             question={currentQuestion}
             value={responses[currentQuestion.id] || (currentQuestion.type === 'checkboxes' ? [] : '')}
@@ -468,6 +489,7 @@ export function QuestionByQuestionLayout({
               Select an option to continue automatically
             </p>
           )}
+          </div>
         </div>
       </main>
 
