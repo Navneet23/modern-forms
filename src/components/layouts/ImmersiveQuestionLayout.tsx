@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ParsedForm, FormResponse } from '../../types/form';
-import type { ThemeConfig, ContextualImageCropShape } from '../../types/theme';
+import type { ThemeConfig } from '../../types/theme';
 import { isSingleSelectQuestion } from '../../types/form';
 import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
 import { submitFormResponse } from '../../utils/formParser';
 import { BackgroundEffectRenderer } from '../common/BackgroundEffectRenderer';
+import { SHAPE_CLIP_PATHS, SHAPE_LAYOUT_POSITIONS } from '../creator/ImageCropDialog';
 
 interface ImmersiveQuestionLayoutProps {
   form: ParsedForm;
@@ -71,40 +72,9 @@ export function ImmersiveQuestionLayout({
     );
   };
 
-  // Shape clip paths for different crop shapes
-  const getShapeClipPath = (shape: ContextualImageCropShape): string => {
-    switch (shape) {
-      case 'oval':
-        return 'ellipse(45% 40% at 50% 50%)';
-      case 'hexagon':
-        return 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
-      case 'arch':
-        return 'path("M 0 100 L 0 25 Q 0 0 25 0 L 75 0 Q 100 0 100 25 L 100 100 Z")';
-      case 'blob':
-        return 'path("M 85 2 Q 100 2 100 20 L 100 80 Q 100 98 82 98 L 35 98 Q 2 98 2 75 L 2 30 Q 2 2 35 2 Z")';
-      default:
-        return 'none';
-    }
-  };
-
-  // Fixed layout positions for each shape
-  const getShapePosition = (shape: ContextualImageCropShape): React.CSSProperties => {
-    switch (shape) {
-      case 'oval':
-        return { top: '10%', left: '5%', right: '5%', bottom: '10%' };
-      case 'hexagon':
-        return { top: '15%', left: '10%', right: '10%', bottom: '15%' };
-      case 'arch':
-        return { top: '0', left: '5%', right: '5%', bottom: '5%' };
-      case 'blob':
-        return { top: '0', left: '0', right: '0', bottom: '0' };
-      default:
-        return { top: '0', left: '0', right: '0', bottom: '0' };
-    }
-  };
-
   // Contextual Image Panel component with cropping support
   // Background is rendered at the container level for continuous effect, not inside this panel
+  // Uses same CSS (object-fit: cover + object-position + transform: scale) as ImageCropDialog for WYSIWYG
   const ContextualImagePanel = ({ showProgress = false }: { showProgress?: boolean }) => {
     if (!contextualImageUrl || isMobilePreview) return null;
 
@@ -113,19 +83,21 @@ export function ImmersiveQuestionLayout({
         {/* Image container */}
         {hasCrop && cropSettings ? (
           <div
-            className="absolute"
+            className="absolute overflow-hidden"
             style={{
-              ...getShapePosition(cropSettings.shape),
-              clipPath: getShapeClipPath(cropSettings.shape),
+              ...SHAPE_LAYOUT_POSITIONS[cropSettings.shape],
+              clipPath: SHAPE_CLIP_PATHS[cropSettings.shape],
             }}
           >
-            <div
-              className="absolute inset-0"
+            <img
+              src={contextualImageUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
               style={{
-                backgroundImage: `url(${contextualImageUrl})`,
-                backgroundSize: `${100 / cropSettings.scale}%`,
-                backgroundPosition: `${cropSettings.position.x}% ${cropSettings.position.y}%`,
+                objectPosition: `${cropSettings.position.x}% ${cropSettings.position.y}%`,
+                transform: `scale(${cropSettings.scale})`,
               }}
+              aria-hidden="true"
             />
           </div>
         ) : (

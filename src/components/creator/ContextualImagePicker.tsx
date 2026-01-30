@@ -30,20 +30,11 @@ const CROP_SHAPES: { id: ContextualImageCropShape; name: string; icon: JSX.Eleme
     ),
   },
   {
-    id: 'hexagon',
-    name: 'Hexagon',
+    id: 'circle',
+    name: 'Circle',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <polygon points="12,2 22,8 22,16 12,22 2,16 2,8" strokeWidth={2} />
-      </svg>
-    ),
-  },
-  {
-    id: 'arch',
-    name: 'Arch',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path d="M3 22 L3 8 Q3 2 12 2 Q21 2 21 8 L21 22" strokeWidth={2} />
+        <circle cx="12" cy="12" r="9" strokeWidth={2} />
       </svg>
     ),
   },

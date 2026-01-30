@@ -12,12 +12,12 @@ export interface ThemeColors {
 
 export type BackgroundEffect = 'solid' | 'textured' | 'shapes' | 'gradient';
 
-export type ContextualImageCropShape = 'none' | 'oval' | 'hexagon' | 'arch' | 'blob';
+export type ContextualImageCropShape = 'none' | 'oval' | 'circle' | 'blob';
 
 export interface ContextualImageCropSettings {
   shape: ContextualImageCropShape;
-  position: { x: number; y: number }; // Percentage 0-100, position of crop area on original image
-  scale: number; // Scale factor for the shape size (1 = default, 0.5 = half, 2 = double)
+  position: { x: number; y: number }; // CSS object-position percentage 0-100 (50,50 = center)
+  scale: number; // Zoom level: 1 = cover (no zoom), >1 = zoom in
 }
 
 export interface ThemeConfig {
