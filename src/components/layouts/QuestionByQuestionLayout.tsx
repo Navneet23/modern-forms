@@ -438,21 +438,28 @@ export function QuestionByQuestionLayout({
         id="question-content"
         className="flex-1 flex items-center justify-center px-4 pt-20 pb-24 relative z-10"
       >
-        <div
-          ref={questionRef}
-          className={`max-w-xl w-full rounded-2xl shadow-lg p-6 sm:p-8 ${
-            isAnimating
-              ? direction === 'forward'
-                ? 'slide-exit-active'
-                : 'slide-back-exit-active'
-              : direction === 'forward'
-              ? 'slide-enter-active'
-              : 'slide-back-enter-active'
-          }`}
-          style={{ backgroundColor: theme.colors.surface }}
-          role="region"
-          aria-label={`Question ${currentIndex + 1}: ${currentQuestion.title}`}
-        >
+        <div className="max-w-xl w-full">
+          <h1
+            className="text-3xl font-bold text-center mb-6"
+            style={{ color: theme.colors.text }}
+          >
+            {form.title}
+          </h1>
+          <div
+            ref={questionRef}
+            className={`w-full rounded-2xl shadow-lg p-6 sm:p-8 ${
+              isAnimating
+                ? direction === 'forward'
+                  ? 'slide-exit-active'
+                  : 'slide-back-exit-active'
+                : direction === 'forward'
+                ? 'slide-enter-active'
+                : 'slide-back-enter-active'
+            }`}
+            style={{ backgroundColor: theme.colors.surface }}
+            role="region"
+            aria-label={`Question ${currentIndex + 1}: ${currentQuestion.title}`}
+          >
           <QuestionRenderer
             question={currentQuestion}
             value={responses[currentQuestion.id] || (currentQuestion.type === 'checkboxes' ? [] : '')}
@@ -468,6 +475,7 @@ export function QuestionByQuestionLayout({
               Select an option to continue automatically
             </p>
           )}
+          </div>
         </div>
       </main>
 
