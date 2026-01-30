@@ -51,21 +51,24 @@ When users select the "Q by Q" layout in Creator Studio, they can choose between
 ```
 ┌────────────────────────────────┬────────────────────────────────────────────┐
 │                                │                                            │
-│   Background gradient/image    │         Contextual Image                   │
-│                                │         (full-bleed or shape-cropped)      │
-│   ┌──────────────────────┐     │                                            │
-│   │                      │     │         ┌──────────────┐                   │
-│   │   Question Card      │     │         │  Shape crop  │                   │
-│   │   + Answer Options   │     │         │  (oval/hex/  │                   │
-│   │   + Navigation       │     │         │   arch/blob) │                   │
+│   Continuous background        │         Continuous background              │
+│   (gradient/effect/image)      │         (same as left panel)               │
+│                                │                                            │
+│   ┌──────────────────────┐     │         ┌──────────────┐                   │
+│   │                      │     │         │  Shape crop  │                   │
+│   │   Question Card      │     │         │  (oval/      │                   │
+│   │   + Answer Options   │     │         │   circle/    │                   │
+│   │   + Navigation       │     │         │   blob)      │                   │
 │   │                      │     │         └──────────────┘                   │
 │   └──────────────────────┘     │                                            │
-│                                │   Theme gradient background                │
-│   Progress: Question 3/10      │   behind cropped shape                     │
+│                                │   Background flows continuously            │
+│   Progress: Question 3/10      │   from left to right panel                 │
 │                                │         Progress bar                       │
 └────────────────────────────────┴────────────────────────────────────────────┘
         LEFT PANEL (50%)                      RIGHT PANEL (50%)
 ```
+
+**Background Continuity**: The background (gradient, effects, or image) is rendered once at the outer container level, spanning both panels. This creates a seamless, continuous visual flow rather than two separate backgrounds.
 
 ### Mobile View (No Split-Screen)
 
@@ -112,24 +115,25 @@ Each style generates different prompts:
 
 ### Crop Shapes
 
-Users can optionally crop the contextual image into a shape, with the theme gradient showing as background:
+Users can optionally crop the contextual image into a shape, with the theme background showing behind the shape:
 
-| Shape | Description | Layout Position |
-|-------|-------------|-----------------|
-| **None** | Full-bleed image (default) | Full panel |
-| **Oval** | Ellipse crop | Centered with 10% padding |
-| **Hexagon** | 6-sided polygon | Centered with 15% padding |
-| **Arch** | Rounded top, flat bottom | Top-aligned, 5% side padding |
-| **Blob** | Organic rounded shape | Full panel, 5% bottom padding |
+| Shape | Description | Clip Path | Layout Position |
+|-------|-------------|-----------|-----------------|
+| **None** | Full-bleed image (default) | — | Full panel |
+| **Oval** | Ellipse crop | `ellipse(50% 40% at 50% 50%)` | Centered with 5% padding |
+| **Circle** | Perfect round crop | `circle(45% at 50% 50%)` | Centered with 5% padding |
+| **Blob** | Organic rounded shape | SVG path | Full panel |
 
-### Crop Dialog (`ImageCropDialog`)
+### Crop Dialog (`ImageCropDialog`) — WYSIWYG
+
+The crop dialog uses **identical CSS** as the layout for rendering, guaranteeing what-you-see-is-what-you-get:
 
 When a user selects a crop shape:
-1. A modal dialog opens showing the full image
-2. A darkened overlay covers the image with the selected shape showing through
-3. User can **drag** the shape to position it over the desired part of the image
-4. User can **resize** the shape via a slider control
-5. Shape outline shown with white dashed border
+1. A modal dialog opens showing a **WYSIWYG preview** of the shape with the image
+2. The preview uses the same clip path, layout position, and CSS rendering as the final layout
+3. User can **drag** on the preview to reposition the image focal point
+4. User can **zoom** via a slider (1 = cover fit, up to 3 = zoomed in)
+5. A "Drag to reposition" hint appears when not actively dragging
 6. **Closing the dialog:**
    - Click the **X** button (top-right corner)
    - Click **Cancel** button
@@ -137,12 +141,18 @@ When a user selects a crop shape:
    - Press **Escape** key
 7. Click **Select** to apply the crop settings
 
+### Shared Constants
+
+Clip paths and layout positions are defined once in `ImageCropDialog.tsx` and exported for use by both the dialog and `ImmersiveQuestionLayout.tsx`:
+- `SHAPE_CLIP_PATHS` — CSS clip-path values per shape
+- `SHAPE_LAYOUT_POSITIONS` — Fixed inset positions per shape (top, left, right, bottom)
+
 ### Cropped Display in Layout
 
 When a crop shape is applied:
-- The right panel shows a theme gradient background (`primary → secondary` at 135°)
-- The selected shape displays the cropped portion of the image using CSS `clip-path`
-- The image portion shown is determined by the user's crop position and scale
+- The theme background (gradient, effects, or image) flows continuously behind both panels
+- The selected shape displays the image using CSS `clip-path`
+- Image rendering uses `object-fit: cover` + `object-position` + `transform: scale()` — same as the dialog
 - Shape position in the layout is fixed per shape type
 
 ---
@@ -164,7 +174,7 @@ Only visible when **Q by Q + Immersive** is selected:
 - Upload custom image tab
 - Preview of current selection
 - Editable AI-generated prompt with "Generate image" button
-- **Image Shape** selector (None, Oval, Hexagon, Arch, Blob)
+- **Image Shape** selector (None, Oval, Circle, Blob)
 - "Adjust crop position" link to re-open the crop dialog
 
 ---
@@ -174,12 +184,12 @@ Only visible when **Q by Q + Immersive** is selected:
 ### ThemeConfig Additions
 
 ```typescript
-type ContextualImageCropShape = 'none' | 'oval' | 'hexagon' | 'arch' | 'blob';
+type ContextualImageCropShape = 'none' | 'oval' | 'circle' | 'blob';
 
 interface ContextualImageCropSettings {
   shape: ContextualImageCropShape;
-  position: { x: number; y: number }; // Percentage 0-100
-  scale: number;                       // 0.3 to 2.0
+  position: { x: number; y: number }; // CSS object-position percentage 0-100 (50,50 = center)
+  scale: number;                       // Zoom level: 1 = cover (no zoom), up to 3 = zoomed in
 }
 
 interface ThemeConfig {
@@ -262,9 +272,11 @@ The API instruction to the text model prioritizes form context:
 4. **Fallback Panel**: When no contextual image is set, right panel shows a gradient based on theme colors
 5. **Progress Bar**: Shown on both panels (left panel full progress, right panel minimal white bar)
 6. **Responsive**: Uses `lg:` breakpoint for split-screen (hidden on mobile)
-7. **Crop Rendering**: Uses CSS `clip-path` with `background-position` and `background-size` for shape masking
-8. **Reusable Panel**: `ContextualImagePanel` sub-component handles all right panel rendering (cropped, uncropped, with/without progress)
-9. **Rename**: "Try Again" button renamed to "Generate image" in both BackgroundImagePicker and ContextualImagePicker
+7. **Crop Rendering (WYSIWYG)**: Uses `object-fit: cover` + `object-position` + `transform: scale()` in both the crop dialog and the layout, ensuring what the user sees in the dialog matches the final output
+8. **Shared Crop Constants**: `SHAPE_CLIP_PATHS` and `SHAPE_LAYOUT_POSITIONS` exported from `ImageCropDialog.tsx`, imported by `ImmersiveQuestionLayout.tsx` — single source of truth
+9. **Continuous Background**: `BackgroundLayers` rendered at the outer container level (not inside each panel), so background effects flow seamlessly across both the left and right panels
+10. **Reusable Panel**: `ContextualImagePanel` sub-component handles all right panel rendering (cropped, uncropped, with/without progress)
+11. **Rename**: "Try Again" button renamed to "Generate image" in both BackgroundImagePicker and ContextualImagePicker
 
 ---
 
@@ -299,16 +311,32 @@ All 88 existing tests pass. The feature doesn't break any existing functionality
    - Style guidance applied as secondary visual treatment
 
 5. **Contextual Image Cropping** (`3f95630`)
-   - Added 5 crop shapes: none, oval, hexagon, arch, blob
+   - Added crop shapes: none, oval, hexagon, arch, blob
    - Created ImageCropDialog with draggable/resizable crop area
    - Shape selection UI in ContextualImagePicker
    - CSS clip-path rendering in ImmersiveQuestionLayout
    - Theme gradient background behind cropped shapes
    - Crop settings persisted in URL sharing
 
-6. **Crop Dialog UX Fix** (current)
+6. **Crop Dialog UX Fix** (`caf7d4f`)
    - Added X close button to crop dialog header
    - Click outside dialog to close
    - Escape key to close
    - Renamed CTA from "Apply Crop" to "Select"
    - Fixed dialog sizing to ensure buttons always visible (`max-h-[90vh]`, flex layout)
+
+7. **Theme Background Behind Cropped Image** (`fc72280`)
+   - Replaced hardcoded primary-to-secondary gradient with `BackgroundLayers` component
+   - Right panel now shows matching background effects, gradient, or image behind cropped shapes
+
+8. **Continuous Background Across Panels** (`bf53d3e`)
+   - Moved `BackgroundLayers` from inside each panel to the outer flex container
+   - Background effect/gradient/image now flows continuously across both left and right panels
+   - Eliminates visible seam between panels
+
+9. **Fix Crop Mismatch and Simplify Shapes** (`68a681e`)
+   - Rewrote crop rendering to use identical CSS in both dialog and layout (`object-fit: cover` + `object-position` + `transform: scale()`) for WYSIWYG
+   - Removed hexagon and arch shapes, added circle (perfect round)
+   - Final shapes: None, Oval, Circle, Blob
+   - Exported shared constants (`SHAPE_CLIP_PATHS`, `SHAPE_LAYOUT_POSITIONS`) from `ImageCropDialog`
+   - Changed zoom slider from size (0.3–2) to zoom (1–3, where 1 = cover)
