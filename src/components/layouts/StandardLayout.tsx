@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ParsedForm, FormResponse } from '../../types/form';
 import type { ThemeConfig, HeaderImageShape } from '../../types/theme';
 import { HEADER_SHAPE_CLIP_PATHS } from '../creator/HeaderImagePicker';
@@ -26,6 +26,20 @@ export function StandardLayout({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isNarrow, setIsNarrow] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setIsNarrow(entry.contentRect.width < 500);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Use theme header image if available
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
@@ -186,6 +200,7 @@ export function StandardLayout({
 
   return (
     <div
+      ref={containerRef}
       className="min-h-screen relative"
       style={{
         backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background,
@@ -247,31 +262,12 @@ export function StandardLayout({
             </div>
           )}
 
-          {/* Integrated style: title left, shaped image right */}
-          {displayHeaderImage && theme.headerStyle === 'integrated' && (
-            <div
-              className="rounded-2xl shadow-md p-6 sm:p-8 relative overflow-hidden"
-              style={{ backgroundColor: titleCardBg, minHeight: '200px' }}
-            >
-              <div className="relative z-10 pr-[45%]">
-                <h1
-                  className="text-3xl sm:text-4xl font-bold mb-2"
-                  style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
-                >
-                  {form.title}
-                </h1>
-                {form.description && (
-                  <p
-                    className="text-base sm:text-lg"
-                    style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
-                  >
-                    {form.description}
-                  </p>
-                )}
-              </div>
-              {/* Shaped image on the right */}
+          {/* Integrated style: image above card when narrow, side-by-side when wide */}
+          {displayHeaderImage && theme.headerStyle === 'integrated' && isNarrow && (
+            <div className="flex flex-col items-center">
+              {/* Shaped image floating above */}
               <div
-                className="absolute top-0 right-0 w-[45%] h-full"
+                className="w-40 h-40 flex-shrink-0 relative z-10"
                 style={{
                   clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'blob'],
                 }}
@@ -295,6 +291,76 @@ export function StandardLayout({
                   aria-hidden="true"
                 />
               </div>
+              {/* Title card overlapping the image */}
+              <div
+                className="rounded-2xl shadow-md p-6 w-full -mt-8"
+                style={{ backgroundColor: titleCardBg }}
+              >
+                <h1
+                  className="text-3xl font-bold mb-2 pt-4"
+                  style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                >
+                  {form.title}
+                </h1>
+                {form.description && (
+                  <p
+                    className="text-base"
+                    style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                  >
+                    {form.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {displayHeaderImage && theme.headerStyle === 'integrated' && !isNarrow && (
+            <div
+              className="rounded-2xl shadow-md overflow-hidden relative"
+              style={{ backgroundColor: titleCardBg, padding: '2rem' }}
+            >
+              {/* Wide: text left, shaped image right */}
+              <div className="relative z-10 pr-[45%]" style={{ minHeight: '160px' }}>
+                    <h1
+                      className="text-4xl font-bold mb-2"
+                      style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                    >
+                      {form.title}
+                    </h1>
+                    {form.description && (
+                      <p
+                        className="text-lg"
+                        style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                      >
+                        {form.description}
+                      </p>
+                    )}
+                  </div>
+                  <div
+                    className="absolute top-0 right-0 w-[45%] h-full"
+                    style={{
+                      clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'blob'],
+                    }}
+                  >
+                    <img
+                      src={displayHeaderImage}
+                      alt=""
+                      className="w-full h-full"
+                      style={{
+                        objectFit: 'cover',
+                        objectPosition: theme.headerImageCrop
+                          ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
+                          : '50% 50%',
+                        transform: theme.headerImageCrop
+                          ? `scale(${theme.headerImageCrop.scale})`
+                          : undefined,
+                        transformOrigin: theme.headerImageCrop
+                          ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
+                          : undefined,
+                      }}
+                      aria-hidden="true"
+                    />
+                  </div>
             </div>
           )}
 
