@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ParsedForm, FormResponse } from '../../types/form';
-import type { ThemeConfig } from '../../types/theme';
+import type { ThemeConfig, HeaderImageShape } from '../../types/theme';
+import { HEADER_SHAPE_CLIP_PATHS } from '../creator/HeaderImagePicker';
 import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
 import { submitFormResponse } from '../../utils/formParser';
@@ -201,36 +202,112 @@ export function StandardLayout({
       <main id="main-content" className="max-w-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <header className="mb-8">
-          {displayHeaderImage && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-md">
-              <img
-                src={displayHeaderImage}
-                alt=""
-                className="w-full h-48 object-cover"
-                aria-hidden="true"
-              />
+          {/* Banner style (default when image present): full-width image with title card overlapping */}
+          {displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle) && (
+            <div className="relative mb-6">
+              <div className="rounded-2xl overflow-hidden shadow-md">
+                <img
+                  src={displayHeaderImage}
+                  alt=""
+                  className="w-full h-56 object-cover"
+                  aria-hidden="true"
+                />
+              </div>
+              <div
+                className="rounded-2xl shadow-md p-6 sm:p-8 mx-4 -mt-10 relative z-10"
+                style={{ backgroundColor: titleCardBg }}
+              >
+                <h1
+                  className="text-3xl sm:text-4xl font-bold mb-2"
+                  style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                >
+                  {form.title}
+                </h1>
+                {form.description && (
+                  <p
+                    className="text-base sm:text-lg"
+                    style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                  >
+                    {form.description}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
-          <div
-            className="rounded-2xl shadow-md p-6 sm:p-8"
-            style={{ backgroundColor: titleCardBg }}
-          >
-            <h1
-              className="text-3xl sm:text-4xl font-bold mb-2"
-              style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+          {/* Integrated style: title left, shaped image right */}
+          {displayHeaderImage && theme.headerStyle === 'integrated' && (
+            <div
+              className="rounded-2xl shadow-md p-6 sm:p-8 relative overflow-hidden"
+              style={{ backgroundColor: titleCardBg, minHeight: '200px' }}
             >
-              {form.title}
-            </h1>
-            {form.description && (
-              <p
-                className="text-base sm:text-lg"
-                style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+              <div className="relative z-10 pr-[45%]">
+                <h1
+                  className="text-3xl sm:text-4xl font-bold mb-2"
+                  style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                >
+                  {form.title}
+                </h1>
+                {form.description && (
+                  <p
+                    className="text-base sm:text-lg"
+                    style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                  >
+                    {form.description}
+                  </p>
+                )}
+              </div>
+              {/* Shaped image on the right */}
+              <div
+                className="absolute top-0 right-0 w-[45%] h-full"
+                style={{
+                  clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'blob'],
+                }}
               >
-                {form.description}
-              </p>
-            )}
-          </div>
+                <img
+                  src={displayHeaderImage}
+                  alt=""
+                  className="w-full h-full"
+                  style={{
+                    objectFit: 'cover',
+                    objectPosition: theme.headerImageCrop
+                      ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
+                      : '50% 50%',
+                    transform: theme.headerImageCrop
+                      ? `scale(${theme.headerImageCrop.scale})`
+                      : undefined,
+                    transformOrigin: theme.headerImageCrop
+                      ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
+                      : undefined,
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* No header image: default title card */}
+          {!displayHeaderImage && (
+            <div
+              className="rounded-2xl shadow-md p-6 sm:p-8"
+              style={{ backgroundColor: titleCardBg }}
+            >
+              <h1
+                className="text-3xl sm:text-4xl font-bold mb-2"
+                style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+              >
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-base sm:text-lg"
+                  style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                >
+                  {form.description}
+                </p>
+              )}
+            </div>
+          )}
         </header>
 
         {/* Form */}

@@ -1,11 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ParsedForm, LayoutMode } from '../../types/form';
-import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
+import type { ThemeConfig, ThemeColors, BackgroundEffect, HeaderStyle, HeaderImageShape, HeaderImageCrop } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
 import { BackgroundImagePicker } from './BackgroundImagePicker';
 import { BackgroundEffectPicker } from './BackgroundEffectPicker';
+import { HeaderImagePicker } from './HeaderImagePicker';
 import { createShareableUrl, isBase64DataUrl } from '../../utils/urlSharing';
 import { StandardLayout } from '../layouts/StandardLayout';
 import { QuestionByQuestionLayout } from '../layouts/QuestionByQuestionLayout';
@@ -93,6 +94,37 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
         ...prev.colors,
         [colorKey]: value,
       },
+    }));
+  }, [setCurrentTheme]);
+
+  // Handle header image changes
+  const handleHeaderImageChange = useCallback((url: string | undefined) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      headerImageUrl: url,
+      headerStyle: url ? (prev.headerStyle || 'banner') : undefined,
+    }));
+  }, [setCurrentTheme]);
+
+  const handleHeaderStyleChange = useCallback((style: HeaderStyle) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      headerStyle: style,
+    }));
+  }, [setCurrentTheme]);
+
+  const handleHeaderShapeChange = useCallback((shape: HeaderImageShape) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      headerImageShape: shape,
+    }));
+  }, [setCurrentTheme]);
+
+  const handleHeaderCropChange = useCallback((crop: HeaderImageCrop) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      headerImageCrop: crop,
     }));
   }, [setCurrentTheme]);
 
@@ -234,6 +266,18 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                 </button>
               </div>
             </div>
+
+            {/* Header Image Picker */}
+            <HeaderImagePicker
+              headerImageUrl={currentTheme.headerImageUrl}
+              headerStyle={currentTheme.headerStyle}
+              headerImageShape={currentTheme.headerImageShape}
+              headerImageCrop={currentTheme.headerImageCrop}
+              onImageChange={handleHeaderImageChange}
+              onStyleChange={handleHeaderStyleChange}
+              onShapeChange={handleHeaderShapeChange}
+              onCropChange={handleHeaderCropChange}
+            />
 
             {/* Theme Selector */}
             <ThemeSelector

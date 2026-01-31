@@ -12,6 +12,15 @@ export interface ThemeColors {
 
 export type BackgroundEffect = 'solid' | 'textured' | 'shapes' | 'gradient';
 
+export type HeaderStyle = 'banner' | 'integrated';
+export type HeaderImageShape = 'blob' | 'circle';
+
+export interface HeaderImageCrop {
+  x: number;    // 0-100, focal point horizontal
+  y: number;    // 0-100, focal point vertical
+  scale: number; // 1-3, zoom level
+}
+
 export interface ThemeConfig {
   id: string;
   name: string;
@@ -20,6 +29,9 @@ export interface ThemeConfig {
   borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
   fontFamily: string;
   headerImageUrl?: string;
+  headerStyle?: HeaderStyle;
+  headerImageShape?: HeaderImageShape;
+  headerImageCrop?: HeaderImageCrop;
   backgroundImageUrl?: string;
   backgroundEffect?: BackgroundEffect;
 }
