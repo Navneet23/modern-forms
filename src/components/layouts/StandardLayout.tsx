@@ -97,7 +97,7 @@ export function StandardLayout({
   // Use absolute positioning in preview mode to stay within container
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
-  // Blend primary and background colors for the title card
+  // Blend primary (45%) and background (55%) for the title card tint
   const blendColors = (hex1: string, hex2: string, weight: number): string => {
     const h1 = hex1.replace('#', '');
     const h2 = hex2.replace('#', '');
@@ -107,7 +107,7 @@ export function StandardLayout({
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   };
 
-  const titleCardBg = blendColors(theme.colors.primary, theme.colors.background, 0.55);
+  const titleCardBg = blendColors(theme.colors.primary, theme.colors.background, 0.45);
 
   // Determine contrast text color for the title card
   const getTitleTextColor = (bgHex: string): string => {

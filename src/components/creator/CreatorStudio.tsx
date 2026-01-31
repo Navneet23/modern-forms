@@ -235,28 +235,6 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               </div>
             </div>
 
-            {/* Font Picker */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700">Font</h3>
-              <select
-                value={currentTheme.fontFamily}
-                onChange={(e) => handleFontFamilyChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                style={{ fontFamily: currentTheme.fontFamily }}
-              >
-                <option value="'Inter', system-ui, sans-serif" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>Inter</option>
-                <option value="'Poppins', system-ui, sans-serif" style={{ fontFamily: "'Poppins', system-ui, sans-serif" }}>Poppins</option>
-                <option value="'Playfair Display', Georgia, serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Playfair Display</option>
-                <option value="'Roboto', system-ui, sans-serif" style={{ fontFamily: "'Roboto', system-ui, sans-serif" }}>Roboto</option>
-                <option value="'Lora', Georgia, serif" style={{ fontFamily: "'Lora', Georgia, serif" }}>Lora</option>
-                <option value="'Montserrat', system-ui, sans-serif" style={{ fontFamily: "'Montserrat', system-ui, sans-serif" }}>Montserrat</option>
-                <option value="'Source Sans 3', system-ui, sans-serif" style={{ fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>Source Sans 3</option>
-                <option value="'Merriweather', Georgia, serif" style={{ fontFamily: "'Merriweather', Georgia, serif" }}>Merriweather</option>
-                <option value="'Raleway', system-ui, sans-serif" style={{ fontFamily: "'Raleway', system-ui, sans-serif" }}>Raleway</option>
-                <option value="'Nunito', system-ui, sans-serif" style={{ fontFamily: "'Nunito', system-ui, sans-serif" }}>Nunito</option>
-              </select>
-            </div>
-
             {/* Theme Selector */}
             <ThemeSelector
               selectedThemeId={currentTheme.id}
@@ -287,6 +265,48 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               secondaryColor={currentTheme.colors.secondary}
               disabled={!!currentTheme.backgroundImageUrl}
             />
+
+            {/* Font Picker */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700">Title Font</h3>
+              <select
+                value={currentTheme.fontFamily}
+                onChange={(e) => handleFontFamilyChange(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ fontFamily: currentTheme.fontFamily }}
+              >
+                <optgroup label="Sans Serif">
+                  <option value="'Inter', system-ui, sans-serif">Inter</option>
+                  <option value="'Poppins', system-ui, sans-serif">Poppins</option>
+                  <option value="'Roboto', system-ui, sans-serif">Roboto</option>
+                  <option value="'Montserrat', system-ui, sans-serif">Montserrat</option>
+                  <option value="'Raleway', system-ui, sans-serif">Raleway</option>
+                  <option value="'Nunito', system-ui, sans-serif">Nunito</option>
+                  <option value="'Source Sans 3', system-ui, sans-serif">Source Sans 3</option>
+                </optgroup>
+                <optgroup label="Serif">
+                  <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
+                  <option value="'Lora', Georgia, serif">Lora</option>
+                  <option value="'Merriweather', Georgia, serif">Merriweather</option>
+                  <option value="'Libre Baskerville', Georgia, serif">Libre Baskerville</option>
+                </optgroup>
+                <optgroup label="Display">
+                  <option value="'Abril Fatface', Georgia, serif">Abril Fatface</option>
+                  <option value="'Bebas Neue', system-ui, sans-serif">Bebas Neue</option>
+                  <option value="'Oswald', system-ui, sans-serif">Oswald</option>
+                  <option value="'Righteous', system-ui, sans-serif">Righteous</option>
+                  <option value="'Fredoka', system-ui, sans-serif">Fredoka</option>
+                </optgroup>
+                <optgroup label="Handwritten">
+                  <option value="'Dancing Script', cursive">Dancing Script</option>
+                  <option value="'Caveat', cursive">Caveat</option>
+                  <option value="'Pacifico', cursive">Pacifico</option>
+                  <option value="'Sacramento', cursive">Sacramento</option>
+                  <option value="'Great Vibes', cursive">Great Vibes</option>
+                  <option value="'Satisfy', cursive">Satisfy</option>
+                </optgroup>
+              </select>
+            </div>
           </div>
         </aside>
 
