@@ -198,40 +198,52 @@ export function StandardLayout({
         Skip to main content
       </a>
 
+      {/* Banner style: full-width image above the constrained content */}
+      {displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle) && (
+        <div className="relative z-10">
+          <div className="overflow-hidden shadow-md">
+            <img
+              src={displayHeaderImage}
+              alt=""
+              className="w-full object-cover"
+              style={{ aspectRatio: '16 / 5' }}
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Content layer */}
-      <main id="main-content" className="max-w-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10">
+      <main
+        id="main-content"
+        className={`max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 ${
+          displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle)
+            ? 'pt-0 pb-8'
+            : 'py-8'
+        }`}
+      >
         {/* Header */}
         <header className="mb-8">
-          {/* Banner style (default when image present): full-width image with title card overlapping */}
+          {/* Banner style: title card overlapping the banner image */}
           {displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle) && (
-            <div className="relative mb-6">
-              <div className="rounded-2xl overflow-hidden shadow-md">
-                <img
-                  src={displayHeaderImage}
-                  alt=""
-                  className="w-full h-56 object-cover"
-                  aria-hidden="true"
-                />
-              </div>
-              <div
-                className="rounded-2xl shadow-md p-6 sm:p-8 mx-4 -mt-10 relative z-10"
-                style={{ backgroundColor: titleCardBg }}
+            <div
+              className="rounded-2xl shadow-md p-6 sm:p-8 -mt-12 relative z-10"
+              style={{ backgroundColor: titleCardBg }}
+            >
+              <h1
+                className="text-3xl sm:text-4xl font-bold mb-2"
+                style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
               >
-                <h1
-                  className="text-3xl sm:text-4xl font-bold mb-2"
-                  style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-base sm:text-lg"
+                  style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
                 >
-                  {form.title}
-                </h1>
-                {form.description && (
-                  <p
-                    className="text-base sm:text-lg"
-                    style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
-                  >
-                    {form.description}
-                  </p>
-                )}
-              </div>
+                  {form.description}
+                </p>
+              )}
             </div>
           )}
 
