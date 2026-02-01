@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { HeaderStyle, HeaderImageShape, HeaderImageCrop } from '../../types/theme';
+import { HEADER_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
 
 // Clip paths for header image shapes
 export const HEADER_SHAPE_CLIP_PATHS: Record<HeaderImageShape, string> = {
@@ -34,18 +35,46 @@ export function HeaderImagePicker({
   onCropChange,
 }: HeaderImagePickerProps) {
   const [showCropDialog, setShowCropDialog] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB');
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onload = () => {
-      onImageChange(reader.result as string);
+    reader.onload = async () => {
+      const base64Url = reader.result as string;
+      setIsUploading(true);
+
+      try {
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Url }),
+        });
+        const data = await response.json();
+        onImageChange(data.url);
+      } catch {
+        // Fall back to base64 if upload fails
+        onImageChange(base64Url);
+      } finally {
+        setIsUploading(false);
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  const handleGallerySelect = (imageId: number) => {
+    const url = getPicsumUrl(imageId, 1200, 400);
+    onImageChange(url);
   };
 
   const handleRemove = () => {
@@ -58,12 +87,32 @@ export function HeaderImagePicker({
 
       {/* Image source */}
       {!headerImageUrl ? (
-        <div>
+        <div className="space-y-3">
+          {/* Gallery grid */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {HEADER_GALLERY.map((imageId) => (
+              <button
+                key={imageId}
+                onClick={() => handleGallerySelect(imageId)}
+                className="relative aspect-[3/2] rounded-md overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all hover:opacity-90"
+              >
+                <img
+                  src={getPicsumUrl(imageId, 200, 133)}
+                  alt={`Header option ${imageId}`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Upload button */}
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-all"
+            disabled={isUploading}
+            className="w-full px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Upload image
+            {isUploading ? 'Uploading...' : 'Upload image'}
           </button>
           <input
             ref={fileInputRef}
@@ -153,9 +202,10 @@ export function HeaderImagePicker({
           {/* Change image */}
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full text-xs text-gray-500 hover:text-gray-700 py-1"
+            disabled={isUploading}
+            className="w-full text-xs text-gray-500 hover:text-gray-700 py-1 disabled:opacity-50"
           >
-            Change image
+            {isUploading ? 'Uploading...' : 'Change image'}
           </button>
           <input
             ref={fileInputRef}

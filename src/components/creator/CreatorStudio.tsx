@@ -157,8 +157,9 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // Handle create & copy - uses URL-based sharing (no localStorage)
   const handleCreateAndCopy = useCallback(() => {
-    // Check if the background image is a base64 data URL (AI-generated or uploaded)
-    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl);
+    // Check if any image is a base64 data URL (uploaded without successful blob hosting)
+    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl)
+      || isBase64DataUrl(currentTheme.headerImageUrl);
 
     const url = createShareableUrl(originalFormUrl, activeLayout, currentTheme);
 
@@ -226,8 +227,8 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <div className="text-sm">
-            <p className="font-medium">Background image not included</p>
-            <p className="mt-1 text-amber-700">AI-generated and uploaded images cannot be shared via URL. Recipients will see the background effect instead.</p>
+            <p className="font-medium">Uploaded images not included</p>
+            <p className="mt-1 text-amber-700">Uploaded images could not be hosted and won't appear in shared links. Use gallery images or AI-generated images instead.</p>
           </div>
         </div>
       )}

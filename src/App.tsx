@@ -163,7 +163,7 @@ function App() {
       }
     }
     const layoutMode = sharedLayoutMode || formConfig?.layoutMode || 'standard';
-    const headerImageUrl = formConfig?.headerImageUrl;
+    const headerImageUrl = sharedTheme?.headerImageUrl || formConfig?.headerImageUrl;
 
     return layoutMode === 'standard' ? (
       <StandardLayout

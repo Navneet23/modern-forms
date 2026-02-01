@@ -65,6 +65,22 @@ export function searchBackgroundImages(query: string): number[] {
   return BACKGROUND_GALLERY;
 }
 
+// Curated gallery of header images that work well for forms
+export const HEADER_GALLERY: number[] = [
+  380,  // Business/office
+  374,  // Professional
+  0,    // Technology
+  10,   // Nature/forest
+  96,   // Creative
+  281,  // Abstract
+  100,  // Travel/scenic
+  292,  // Health/food
+  20,   // Education
+  164,  // Architecture
+  431,  // Warm tones
+  399,  // Geometric
+];
+
 const HEADER_IMAGES: { [key: string]: number[] } = {
   business: [380, 374, 395, 452, 453],
   technology: [0, 1, 2, 60, 180],
