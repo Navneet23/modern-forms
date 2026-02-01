@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ParsedForm, FormResponse } from '../../types/form';
-import type { ThemeConfig, HeaderImageShape } from '../../types/theme';
+import type { ThemeConfig } from '../../types/theme';
 import { HEADER_SHAPE_CLIP_PATHS } from '../creator/HeaderImagePicker';
 import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
@@ -44,6 +44,15 @@ export function StandardLayout({
   // Use theme header image if available
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
   const hasBackgroundImage = !!theme.backgroundImageUrl;
+
+  // Track natural aspect ratio of the header image for correct crop rendering
+  const [headerImgAspect, setHeaderImgAspect] = useState(1);
+  useEffect(() => {
+    if (!displayHeaderImage) return;
+    const img = new Image();
+    img.onload = () => setHeaderImgAspect(img.naturalWidth / img.naturalHeight);
+    img.src = displayHeaderImage;
+  }, [displayHeaderImage]);
 
   const handleChange = (questionId: string, value: string | string[]) => {
     setResponses((prev) => ({ ...prev, [questionId]: value }));
@@ -136,6 +145,39 @@ export function StandardLayout({
   };
 
   const titleTextColor = getTitleTextColor(titleCardBg);
+
+  // Compute absolute-positioning styles for the integrated header image so the
+  // crop dialog's coordinate system maps 1:1 onto the rendered form.
+  const getIntegratedImageStyle = (): React.CSSProperties => {
+    const crop = theme.headerImageCrop;
+    if (!crop) return { objectFit: 'cover' as const, objectPosition: '50% 50%', width: '100%', height: '100%' };
+
+    const coverW = Math.max(1, headerImgAspect);   // image width relative to square container
+    const coverH = Math.max(1, 1 / headerImgAspect); // image height relative to square container
+
+    // Coverage scale: enlarge the image beyond cover-size so it fills the full
+    // container (0%-100%) regardless of how off-center the crop point is.
+    const safeX = Math.max(1, Math.min(99, crop.x));
+    const safeY = Math.max(1, Math.min(99, crop.y));
+    const cs = Math.max(
+      1,
+      50 / (safeX * coverW),
+      50 / ((100 - safeX) * coverW),
+      50 / (safeY * coverH),
+      50 / ((100 - safeY) * coverH)
+    );
+
+    return {
+      position: 'absolute' as const,
+      maxWidth: 'none',
+      width: `${coverW * cs * 100}%`,
+      height: `${coverH * cs * 100}%`,
+      left: `${50 - crop.x * coverW * cs}%`,
+      top: `${50 - crop.y * coverH * cs}%`,
+      transform: `scale(${crop.scale})`,
+      transformOrigin: `${crop.x}% ${crop.y}%`,
+    };
+  };
 
   // Background layers component - handles both image and effect backgrounds
   const BackgroundLayers = () => {
@@ -269,25 +311,14 @@ export function StandardLayout({
               <div
                 className="w-40 h-40 flex-shrink-0 relative z-10"
                 style={{
-                  clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'blob'],
+                  overflow: 'hidden',
+                  clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'cloud'],
                 }}
               >
                 <img
                   src={displayHeaderImage}
                   alt=""
-                  className="w-full h-full"
-                  style={{
-                    objectFit: 'cover',
-                    objectPosition: theme.headerImageCrop
-                      ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
-                      : '50% 50%',
-                    transform: theme.headerImageCrop
-                      ? `scale(${theme.headerImageCrop.scale})`
-                      : undefined,
-                    transformOrigin: theme.headerImageCrop
-                      ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
-                      : undefined,
-                  }}
+                  style={getIntegratedImageStyle()}
                   aria-hidden="true"
                 />
               </div>
@@ -316,51 +347,44 @@ export function StandardLayout({
 
           {displayHeaderImage && theme.headerStyle === 'integrated' && !isNarrow && (
             <div
-              className="rounded-2xl shadow-md overflow-hidden relative"
-              style={{ backgroundColor: titleCardBg, padding: '2rem' }}
+              className="rounded-2xl shadow-md overflow-hidden"
+              style={{ backgroundColor: titleCardBg }}
             >
               {/* Wide: text left, shaped image right */}
-              <div className="relative z-10 pr-[45%]" style={{ minHeight: '160px' }}>
-                    <h1
-                      className="text-4xl font-bold mb-2"
-                      style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
-                    >
-                      {form.title}
-                    </h1>
-                    {form.description && (
-                      <p
-                        className="text-lg"
-                        style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
-                      >
-                        {form.description}
-                      </p>
-                    )}
-                  </div>
-                  <div
-                    className="absolute top-0 right-0 w-[45%] h-full"
-                    style={{
-                      clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'blob'],
-                    }}
+              <div className="flex items-center p-6 sm:p-8 gap-4">
+                <div className="flex-1 min-w-0">
+                  <h1
+                    className="text-4xl font-bold mb-2"
+                    style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
                   >
-                    <img
-                      src={displayHeaderImage}
-                      alt=""
-                      className="w-full h-full"
-                      style={{
-                        objectFit: 'cover',
-                        objectPosition: theme.headerImageCrop
-                          ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
-                          : '50% 50%',
-                        transform: theme.headerImageCrop
-                          ? `scale(${theme.headerImageCrop.scale})`
-                          : undefined,
-                        transformOrigin: theme.headerImageCrop
-                          ? `${theme.headerImageCrop.x}% ${theme.headerImageCrop.y}%`
-                          : undefined,
-                      }}
-                      aria-hidden="true"
-                    />
-                  </div>
+                    {form.title}
+                  </h1>
+                  {form.description && (
+                    <p
+                      className="text-lg"
+                      style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                    >
+                      {form.description}
+                    </p>
+                  )}
+                </div>
+                <div
+                  className="flex-shrink-0 relative"
+                  style={{
+                    width: '40%',
+                    aspectRatio: '1',
+                    overflow: 'hidden',
+                    clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'cloud'],
+                  }}
+                >
+                  <img
+                    src={displayHeaderImage}
+                    alt=""
+                    style={getIntegratedImageStyle()}
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
