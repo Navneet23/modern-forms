@@ -1,5 +1,5 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
-import type { ThemeConfig, BackgroundEffect, HeaderStyle, HeaderImageShape, HeaderImageCrop } from '../types/theme';
+import type { ThemeConfig, BackgroundEffect } from '../types/theme';
 import type { LayoutMode } from '../types/form';
 
 /**
