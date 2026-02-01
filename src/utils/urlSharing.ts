@@ -42,8 +42,8 @@ export interface ShareableFormConfig {
     hi?: string;
     // Header style: 'b' = banner, 'i' = integrated
     hs?: 'b' | 'i';
-    // Header image shape: 'bl' = blob, 'ci' = circle
-    hsh?: 'bl' | 'ci';
+    // Header image shape: 'cl' = cloud, 'ci' = circle
+    hsh?: 'cl' | 'ci';
     // Header image crop
     hc?: { x: number; y: number; s: number };
   };
@@ -98,7 +98,7 @@ export function encodeFormConfig(
       ff: theme.fontFamily,
       hi: headerImageUrl_,
       hs: theme.headerStyle === 'banner' ? 'b' : theme.headerStyle === 'integrated' ? 'i' : undefined,
-      hsh: theme.headerImageShape === 'blob' ? 'bl' : theme.headerImageShape === 'circle' ? 'ci' : undefined,
+      hsh: theme.headerImageShape === 'cloud' ? 'cl' : theme.headerImageShape === 'circle' ? 'ci' : undefined,
       hc: theme.headerImageCrop ? { x: theme.headerImageCrop.x, y: theme.headerImageCrop.y, s: theme.headerImageCrop.scale } : undefined,
     },
     ts: Date.now(),
@@ -181,7 +181,7 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
     fontFamily: t.ff || "'Inter', system-ui, sans-serif",
     headerImageUrl: t.hi,
     headerStyle: t.hs === 'b' ? 'banner' : t.hs === 'i' ? 'integrated' : undefined,
-    headerImageShape: t.hsh === 'bl' ? 'blob' : t.hsh === 'ci' ? 'circle' : undefined,
+    headerImageShape: t.hsh === 'cl' ? 'cloud' : t.hsh === 'ci' ? 'circle' : undefined,
     headerImageCrop: t.hc ? { x: t.hc.x, y: t.hc.y, scale: t.hc.s } : undefined,
     backgroundImageUrl: t.bi,
     backgroundEffect: t.be,

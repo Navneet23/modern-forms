@@ -13,7 +13,7 @@ export interface ThemeColors {
 export type BackgroundEffect = 'solid' | 'textured' | 'shapes' | 'gradient';
 
 export type HeaderStyle = 'banner' | 'integrated';
-export type HeaderImageShape = 'blob' | 'circle';
+export type HeaderImageShape = 'cloud' | 'circle';
 
 export interface HeaderImageCrop {
   x: number;    // 0-100, focal point horizontal

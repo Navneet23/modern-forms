@@ -3,9 +3,14 @@ import type { HeaderStyle, HeaderImageShape, HeaderImageCrop } from '../../types
 
 // Clip paths for header image shapes
 export const HEADER_SHAPE_CLIP_PATHS: Record<HeaderImageShape, string> = {
-  blob: "path('M 50 5 C 75 0, 100 15, 95 40 C 100 65, 85 95, 55 95 C 30 100, 5 80, 5 55 C 0 30, 20 5, 50 5 Z')",
+  cloud: 'polygon(50% 2%, 53.9% 2.3%, 57.6% 3.3%, 61.1% 4.8%, 64.4% 6.7%, 67.3% 9.2%, 70% 12%, 73.2% 9.4%, 76.8% 7.5%, 80.6% 6.5%, 84.5% 6.5%, 88.4% 7.6%, 92% 10%, 95% 13.5%, 97% 17.6%, 98.1% 22.3%, 98.3% 27%, 97.6% 31.7%, 96% 36%, 98.4% 40.3%, 99.5% 45%, 99.5% 49.8%, 98.5% 54.4%, 96.6% 58.5%, 94% 62%, 95.5% 66.3%, 96% 71%, 95.5% 75.8%, 94% 80.4%, 91.5% 84.5%, 88% 88%, 83.9% 90.5%, 79.6% 92%, 75.3% 92.5%, 71.1% 92%, 67.3% 90.5%, 64% 88%, 60.5% 91.5%, 56.4% 93.9%, 51.8% 95.3%, 47% 95.4%, 42.3% 94.3%, 38% 92%, 34.7% 93.7%, 30.9% 94.6%, 26.8% 94.8%, 22.4% 94.1%, 18.1% 92.5%, 14% 90%, 10.5% 86.7%, 8% 82.8%, 6.5% 78.5%, 6% 73.9%, 6.5% 69%, 8% 64%, 5.4% 59.7%, 3.5% 55%, 2.5% 50%, 2.5% 45%, 3.6% 40.3%, 6% 36%, 3.7% 31.7%, 2.6% 27%, 2.8% 22.3%, 4.1% 17.6%, 6.5% 13.5%, 10% 10%, 14.1% 7.5%, 18.4% 6%, 22.8% 5.5%, 26.9% 6%, 30.7% 7.5%, 34% 10%, 36.2% 7.3%, 38.6% 5.3%, 41.3% 3.8%, 44.1% 2.7%, 47% 2.2%)',
   circle: 'circle(45% at 50% 50%)',
 };
+
+// Cloud shape polygon points (0-100 percentage coordinates) for reuse in crop dialog
+const CLOUD_POLYGON_POINTS: [number, number][] = [
+  [50,2],[53.9,2.3],[57.6,3.3],[61.1,4.8],[64.4,6.7],[67.3,9.2],[70,12],[73.2,9.4],[76.8,7.5],[80.6,6.5],[84.5,6.5],[88.4,7.6],[92,10],[95,13.5],[97,17.6],[98.1,22.3],[98.3,27],[97.6,31.7],[96,36],[98.4,40.3],[99.5,45],[99.5,49.8],[98.5,54.4],[96.6,58.5],[94,62],[95.5,66.3],[96,71],[95.5,75.8],[94,80.4],[91.5,84.5],[88,88],[83.9,90.5],[79.6,92],[75.3,92.5],[71.1,92],[67.3,90.5],[64,88],[60.5,91.5],[56.4,93.9],[51.8,95.3],[47,95.4],[42.3,94.3],[38,92],[34.7,93.7],[30.9,94.6],[26.8,94.8],[22.4,94.1],[18.1,92.5],[14,90],[10.5,86.7],[8,82.8],[6.5,78.5],[6,73.9],[6.5,69],[8,64],[5.4,59.7],[3.5,55],[2.5,50],[2.5,45],[3.6,40.3],[6,36],[3.7,31.7],[2.6,27],[2.8,22.3],[4.1,17.6],[6.5,13.5],[10,10],[14.1,7.5],[18.4,6],[22.8,5.5],[26.9,6],[30.7,7.5],[34,10],[36.2,7.3],[38.6,5.3],[41.3,3.8],[44.1,2.7],[47,2.2],
+];
 
 interface HeaderImagePickerProps {
   headerImageUrl?: string;
@@ -21,7 +26,7 @@ interface HeaderImagePickerProps {
 export function HeaderImagePicker({
   headerImageUrl,
   headerStyle = 'banner',
-  headerImageShape = 'blob',
+  headerImageShape = 'cloud',
   headerImageCrop,
   onImageChange,
   onStyleChange,
@@ -114,14 +119,14 @@ export function HeaderImagePicker({
               <label className="text-xs font-medium text-gray-600">Shape</label>
               <div className="flex gap-2">
                 <button
-                  onClick={() => onShapeChange('blob')}
+                  onClick={() => onShapeChange('cloud')}
                   className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                    headerImageShape === 'blob'
+                    headerImageShape === 'cloud'
                       ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
                       : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
                   }`}
                 >
-                  Blob
+                  Cloud
                 </button>
                 <button
                   onClick={() => onShapeChange('circle')}
@@ -191,8 +196,32 @@ interface HeaderCropDialogProps {
 function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCropDialogProps) {
   const [localCrop, setLocalCrop] = useState<HeaderImageCrop>(crop);
   const [isDragging, setIsDragging] = useState(false);
+  const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 600, h: 400 });
+  const [imgAspect, setImgAspect] = useState(16 / 9);
   const dragStart = useRef<{ x: number; y: number; cropX: number; cropY: number } | null>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Load image to get natural aspect ratio
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setImgAspect(img.naturalWidth / img.naturalHeight);
+    };
+    img.src = imageUrl;
+  }, [imageUrl]);
+
+  // Track container size for pixel-perfect circle
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height });
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Close on Escape
   useEffect(() => {
@@ -202,6 +231,11 @@ function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCro
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
+
+  // Circle radius in pixels: 40% of the smaller dimension so it's always a perfect circle
+  const radiusPx = Math.min(containerSize.w, containerSize.h) * 0.4;
+  const radiusPctW = (radiusPx / containerSize.w) * 100;
+  const radiusPctH = (radiusPx / containerSize.h) * 100;
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     setIsDragging(true);
@@ -215,65 +249,102 @@ function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCro
   }, [localCrop]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging || !dragStart.current || !previewRef.current) return;
+    if (!isDragging || !dragStart.current || !containerRef.current) return;
 
-    const rect = previewRef.current.getBoundingClientRect();
+    const rect = containerRef.current.getBoundingClientRect();
     const dx = ((e.clientX - dragStart.current.x) / rect.width) * 100;
     const dy = ((e.clientY - dragStart.current.y) / rect.height) * 100;
 
+    // Prevent dragging the shape to positions where coverage scale becomes extreme
+    const marginW = radiusPctW + 2;
+    const marginH = radiusPctH + 2;
+
     setLocalCrop((prev) => ({
       ...prev,
-      x: Math.max(0, Math.min(100, dragStart.current!.cropX - dx)),
-      y: Math.max(0, Math.min(100, dragStart.current!.cropY - dy)),
+      x: Math.max(marginW, Math.min(100 - marginW, dragStart.current!.cropX + dx)),
+      y: Math.max(marginH, Math.min(100 - marginH, dragStart.current!.cropY + dy)),
     }));
-  }, [isDragging]);
+  }, [isDragging, radiusPctW, radiusPctH]);
 
   const handlePointerUp = useCallback(() => {
     setIsDragging(false);
     dragStart.current = null;
   }, []);
 
+  // Generate clip-path using pixel-based radius converted to percentages
+  const getShapeClipPath = () => {
+    const cx = localCrop.x;
+    const cy = localCrop.y;
+
+    if (shape === 'circle') {
+      return `circle(${radiusPx}px at ${cx}% ${cy}%)`;
+    }
+    // Cloud: generate a polygon with percentage coordinates, offset to the crop position
+    // Shape covers shapeSize% of the container, centered at (cx%, cy%)
+    const shapeSizePct = (radiusPx / containerSize.w) * 200; // shape width as % of container
+    const shapeSizePctH = (radiusPx / containerSize.h) * 200; // shape height as % of container
+    const pts = CLOUD_POLYGON_POINTS.map(([px, py]) => {
+      const x = cx + (px - 50) * shapeSizePct / 100;
+      const y = cy + (py - 50) * shapeSizePctH / 100;
+      return `${x.toFixed(1)}% ${y.toFixed(1)}%`;
+    });
+    return `polygon(${pts.join(', ')})`;
+  };
+
+  // Shared image style for zoom
+  const imageTransform = localCrop.scale > 1
+    ? { transform: `scale(${localCrop.scale})`, transformOrigin: `${localCrop.x}% ${localCrop.y}%` }
+    : {};
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Adjust Crop Position</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Adjust Crop Position</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
 
-        {/* Preview */}
-        <div className="p-4 flex-1 overflow-auto">
+        {/* Image area */}
+        <div className="p-5 flex-1 overflow-auto">
           <div
-            ref={previewRef}
-            className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing select-none"
+            ref={containerRef}
+            className="relative w-full rounded-lg overflow-hidden cursor-grab active:cursor-grabbing select-none bg-gray-900"
+            style={{ aspectRatio: `${imgAspect}` }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
           >
+            {/* Full image (dimmed) */}
+            <img
+              src={imageUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.35]"
+              style={imageTransform}
+              draggable={false}
+            />
+
+            {/* Bright region: same image clipped to shape at crop position */}
             <div
               className="absolute inset-0"
-              style={{ clipPath: HEADER_SHAPE_CLIP_PATHS[shape] }}
+              style={{ clipPath: getShapeClipPath() }}
             >
               <img
                 src={imageUrl}
                 alt=""
-                className="w-full h-full"
-                style={{
-                  objectFit: 'cover',
-                  objectPosition: `${localCrop.x}% ${localCrop.y}%`,
-                  transform: `scale(${localCrop.scale})`,
-                  transformOrigin: `${localCrop.x}% ${localCrop.y}%`,
-                }}
+                className="w-full h-full object-cover"
+                style={imageTransform}
                 draggable={false}
               />
             </div>
+
+            {/* Hint */}
             {!isDragging && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="bg-black/40 text-white text-xs px-3 py-1 rounded-full">
+                <span className="bg-black/50 text-white text-sm px-4 py-1.5 rounded-full">
                   Drag to reposition
                 </span>
               </div>
@@ -281,8 +352,8 @@ function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCro
           </div>
 
           {/* Zoom slider */}
-          <div className="mt-4 space-y-1">
-            <div className="flex justify-between text-xs text-gray-500">
+          <div className="mt-5 space-y-1.5">
+            <div className="flex justify-between text-sm text-gray-600">
               <span>Zoom</span>
               <span>{localCrop.scale.toFixed(1)}x</span>
             </div>
@@ -299,18 +370,18 @@ function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCro
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 p-4 border-t border-gray-200">
+        <div className="flex gap-3 p-5 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
             onClick={() => onApply(localCrop)}
-            className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-sm font-medium text-white hover:bg-blue-700"
+            className="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Select
+            Apply
           </button>
         </div>
       </div>
