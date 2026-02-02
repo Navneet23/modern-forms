@@ -312,7 +312,7 @@ export function StandardLayout({
                 className="w-40 h-40 flex-shrink-0 relative z-10"
                 style={{
                   overflow: 'hidden',
-                  clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'cloud'],
+                  clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'circle'],
                 }}
               >
                 <img
@@ -374,7 +374,7 @@ export function StandardLayout({
                     width: '40%',
                     aspectRatio: '1',
                     overflow: 'hidden',
-                    clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'cloud'],
+                    clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'circle'],
                   }}
                 >
                   <img
