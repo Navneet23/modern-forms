@@ -6,12 +6,14 @@ import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
 import { submitFormResponse } from '../../utils/formParser';
 import { BackgroundEffectRenderer } from '../common/BackgroundEffectRenderer';
+import { HEADER_SHAPE_CLIP_PATHS } from '../creator/HeaderImagePicker';
 
 interface QuestionByQuestionLayoutProps {
   form: ParsedForm;
   theme?: ThemeConfig;
   headerImageUrl?: string;
   isPreview?: boolean;
+  previewMode?: 'desktop' | 'mobile';
   onSubmitSuccess?: () => void;
 }
 
@@ -22,6 +24,7 @@ export function QuestionByQuestionLayout({
   theme = defaultTheme,
   headerImageUrl,
   isPreview,
+  previewMode,
   onSubmitSuccess,
 }: QuestionByQuestionLayoutProps) {
   const [viewState, setViewState] = useState<ViewState>('welcome');
@@ -37,6 +40,45 @@ export function QuestionByQuestionLayout({
   // Use theme header image if available
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
   const hasBackgroundImage = !!theme.backgroundImageUrl;
+
+  // Track header image aspect ratio for crop calculations
+  const [headerImgAspect, setHeaderImgAspect] = useState(1);
+  useEffect(() => {
+    if (!displayHeaderImage) return;
+    const img = new Image();
+    img.onload = () => setHeaderImgAspect(img.naturalWidth / img.naturalHeight);
+    img.src = displayHeaderImage;
+  }, [displayHeaderImage]);
+
+  // Compute image positioning for shaped/cropped header images
+  const getIntegratedImageStyle = (): React.CSSProperties => {
+    const crop = theme.headerImageCrop;
+    if (!crop) return { objectFit: 'cover' as const, objectPosition: '50% 50%', width: '100%', height: '100%' };
+
+    const coverW = Math.max(1, headerImgAspect);
+    const coverH = Math.max(1, 1 / headerImgAspect);
+
+    const safeX = Math.max(1, Math.min(99, crop.x));
+    const safeY = Math.max(1, Math.min(99, crop.y));
+    const cs = Math.max(
+      1,
+      50 / (safeX * coverW),
+      50 / ((100 - safeX) * coverW),
+      50 / (safeY * coverH),
+      50 / ((100 - safeY) * coverH)
+    );
+
+    return {
+      position: 'absolute' as const,
+      maxWidth: 'none',
+      width: `${coverW * cs * 100}%`,
+      height: `${coverH * cs * 100}%`,
+      left: `${50 - crop.x * coverW * cs}%`,
+      top: `${50 - crop.y * coverH * cs}%`,
+      transform: `scale(${crop.scale})`,
+      transformOrigin: `${crop.x}% ${crop.y}%`,
+    };
+  };
 
   const currentQuestion = form.questions[currentIndex];
   const totalQuestions = form.questions.length;
@@ -237,6 +279,228 @@ export function QuestionByQuestionLayout({
 
   // Welcome Screen
   if (viewState === 'welcome') {
+    const hasHeaderImage = !!displayHeaderImage && !!theme.headerStyle;
+    // In creator studio preview, use previewMode; on actual page, use viewport width
+    const isMobile = previewMode ? previewMode === 'mobile' : typeof window !== 'undefined' && window.innerWidth < 768;
+
+    // Banner style: full-width strip at top, centered content below
+    if (hasHeaderImage && theme.headerStyle === 'banner') {
+      return (
+        <div
+          className="min-h-screen flex flex-col relative"
+          style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
+        >
+          <BackgroundLayers />
+
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Banner image */}
+            <div className="w-full" style={{ maxHeight: '30vh', overflow: 'hidden' }}>
+              <img
+                src={displayHeaderImage}
+                alt=""
+                className="w-full h-full object-cover object-center"
+                aria-hidden="true"
+              />
+            </div>
+
+            {/* Centered content below banner */}
+            <div className="max-w-2xl w-full text-center px-4 py-12">
+              <h1
+                className="text-5xl sm:text-6xl font-bold mb-6"
+                style={{ color: welcomeTextColor, fontFamily: theme.fontFamily }}
+              >
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-xl sm:text-2xl mb-8"
+                  style={{ color: welcomeTextColor, opacity: 0.9 }}
+                >
+                  {form.description}
+                </p>
+              )}
+
+              <div
+                className="mx-auto mb-8 max-w-lg"
+                style={{ borderBottom: `1px solid ${welcomeTextColor}40` }}
+              />
+
+              <p className="text-sm mb-6" style={{ color: welcomeTextColor, opacity: 0.7 }}>
+                {totalQuestions} questions
+              </p>
+
+              <button
+                onClick={() => setViewState('questions')}
+                className="px-16 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
+                style={{ backgroundColor: theme.colors.primary }}
+              >
+                Start
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Circle style: mobile = circle on top + text below; desktop = text left + circle right
+    if (hasHeaderImage && theme.headerStyle === 'integrated') {
+      return (
+        <div
+          className={`min-h-screen flex relative ${isMobile ? 'flex-col' : 'flex-row'}`}
+          style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
+        >
+          <BackgroundLayers />
+
+          {/* Mobile: circle at top */}
+          {isMobile && (
+            <div className="flex relative z-10 justify-center pt-10 pb-4">
+              <div
+                className="relative overflow-hidden"
+                style={{
+                  width: '60%',
+                  maxWidth: '280px',
+                  aspectRatio: '1',
+                  clipPath: HEADER_SHAPE_CLIP_PATHS['circle'],
+                }}
+              >
+                <img
+                  src={displayHeaderImage}
+                  alt=""
+                  style={getIntegratedImageStyle()}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Text content: centered on mobile, left-half on desktop */}
+          <div className={`relative z-10 flex items-center justify-center p-8 ${isMobile ? 'w-full' : 'w-1/2'}`}>
+            <div className={`max-w-lg w-full ${isMobile ? 'text-center' : 'text-left'}`}>
+              <h1
+                className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6"
+                style={{ color: welcomeTextColor, fontFamily: theme.fontFamily }}
+              >
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-lg sm:text-xl mb-6"
+                  style={{ color: welcomeTextColor, opacity: 0.9 }}
+                >
+                  {form.description}
+                </p>
+              )}
+
+              <p className="text-sm mb-6" style={{ color: welcomeTextColor, opacity: 0.7 }}>
+                {totalQuestions} questions
+              </p>
+
+              <button
+                onClick={() => setViewState('questions')}
+                className="px-16 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
+                style={{ backgroundColor: theme.colors.primary }}
+              >
+                Start
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop: circle on right half */}
+          {!isMobile && (
+            <div className="flex relative z-10 w-1/2 items-center justify-center">
+              <div
+                className="relative overflow-hidden"
+                style={{
+                  width: '50vw',
+                  maxWidth: '600px',
+                  aspectRatio: '1',
+                  clipPath: HEADER_SHAPE_CLIP_PATHS['circle'],
+                }}
+              >
+                <img
+                  src={displayHeaderImage}
+                  alt=""
+                  style={getIntegratedImageStyle()}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Half Card style: split layout with text left, full-height rectangular image right
+    // On mobile, drop the image and show centered text only
+    if (hasHeaderImage && theme.headerStyle === 'half-card') {
+      const crop = theme.headerImageCrop;
+      const cropStyle: React.CSSProperties = crop
+        ? {
+            objectFit: 'cover' as const,
+            objectPosition: `${crop.x}% ${crop.y}%`,
+            transform: crop.scale > 1 ? `scale(${crop.scale})` : undefined,
+            transformOrigin: `${crop.x}% ${crop.y}%`,
+          }
+        : { objectFit: 'cover' as const, objectPosition: '50% 50%' };
+
+      return (
+        <div
+          className={`min-h-screen flex relative ${isMobile ? 'items-center justify-center' : ''}`}
+          style={{ backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background }}
+        >
+          <BackgroundLayers />
+
+          {/* Text content: full-width centered on mobile, left half on desktop */}
+          <div className={`relative z-10 flex items-center justify-center p-8 ${isMobile ? 'w-full' : 'w-1/2'}`}>
+            <div className={`max-w-lg w-full ${isMobile ? 'text-center' : 'text-left'}`}>
+              <h1
+                className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6"
+                style={{ color: welcomeTextColor, fontFamily: theme.fontFamily }}
+              >
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-lg sm:text-xl mb-6"
+                  style={{ color: welcomeTextColor, opacity: 0.9 }}
+                >
+                  {form.description}
+                </p>
+              )}
+
+              <p className="text-sm mb-6" style={{ color: welcomeTextColor, opacity: 0.7 }}>
+                {totalQuestions} questions
+              </p>
+
+              <button
+                onClick={() => setViewState('questions')}
+                className="px-16 py-4 text-lg font-medium text-white rounded-lg transition-all min-h-[48px]"
+                style={{ backgroundColor: theme.colors.primary }}
+              >
+                Start
+              </button>
+            </div>
+          </div>
+
+          {/* Right half: full-height rectangular image (desktop only) */}
+          {!isMobile && (
+            <div className="relative z-10 w-1/2">
+              <div className="absolute inset-2 rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src={displayHeaderImage}
+                  alt=""
+                  className="w-full h-full"
+                  style={cropStyle}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Default: no header image or no headerStyle — centered welcome screen
     return (
       <div
         className="min-h-screen flex items-center justify-center p-4 relative"
@@ -253,7 +517,7 @@ export function QuestionByQuestionLayout({
 
           <h1
             className="text-5xl sm:text-6xl font-bold mb-6"
-            style={{ color: welcomeTextColor }}
+            style={{ color: welcomeTextColor, fontFamily: theme.fontFamily }}
           >
             {form.title}
           </h1>

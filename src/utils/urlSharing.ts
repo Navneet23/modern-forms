@@ -40,8 +40,8 @@ export interface ShareableFormConfig {
     ff?: string;
     // Header image URL
     hi?: string;
-    // Header style: 'b' = banner, 'i' = integrated
-    hs?: 'b' | 'i';
+    // Header style: 'b' = banner, 'i' = integrated, 'h' = half-card
+    hs?: 'b' | 'i' | 'h';
     // Header image shape: 'cl' = cloud, 'ci' = circle
     hsh?: 'cl' | 'ci';
     // Header image crop
@@ -97,7 +97,7 @@ export function encodeFormConfig(
       be: theme.backgroundEffect,
       ff: theme.fontFamily,
       hi: headerImageUrl_,
-      hs: theme.headerStyle === 'banner' ? 'b' : theme.headerStyle === 'integrated' ? 'i' : undefined,
+      hs: theme.headerStyle === 'banner' ? 'b' : theme.headerStyle === 'integrated' ? 'i' : theme.headerStyle === 'half-card' ? 'h' : undefined,
       hsh: theme.headerImageShape === 'cloud' ? 'cl' : theme.headerImageShape === 'circle' ? 'ci' : undefined,
       hc: theme.headerImageCrop ? { x: theme.headerImageCrop.x, y: theme.headerImageCrop.y, s: theme.headerImageCrop.scale } : undefined,
     },
@@ -180,7 +180,7 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
     borderRadius: t.r as ThemeConfig['borderRadius'],
     fontFamily: t.ff || "'Inter', system-ui, sans-serif",
     headerImageUrl: t.hi,
-    headerStyle: t.hs === 'b' ? 'banner' : t.hs === 'i' ? 'integrated' : undefined,
+    headerStyle: t.hs === 'b' ? 'banner' : t.hs === 'i' ? 'integrated' : t.hs === 'h' ? 'half-card' : undefined,
     headerImageShape: t.hsh === 'cl' ? 'cloud' : t.hsh === 'ci' ? 'circle' : undefined,
     headerImageCrop: t.hc ? { x: t.hc.x, y: t.hc.y, scale: t.hc.s } : undefined,
     backgroundImageUrl: t.bi,
