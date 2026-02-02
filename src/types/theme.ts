@@ -34,6 +34,7 @@ export interface ThemeConfig {
   headerImageCrop?: HeaderImageCrop;
   backgroundImageUrl?: string;
   backgroundEffect?: BackgroundEffect;
+  welcomeTitleLight?: boolean;
 }
 
 export const borderRadiusValues = {
