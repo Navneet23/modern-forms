@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { HeaderStyle, HeaderImageShape, HeaderImageCrop } from '../../types/theme';
+import type { LayoutMode } from '../../types/form';
 import { HEADER_GALLERY, getPicsumUrl } from '../../utils/imageSearch';
 
 // Clip paths for header image shapes
@@ -22,6 +23,7 @@ interface HeaderImagePickerProps {
   onStyleChange: (style: HeaderStyle) => void;
   onShapeChange: (shape: HeaderImageShape) => void;
   onCropChange: (crop: HeaderImageCrop) => void;
+  layoutMode?: LayoutMode;
 }
 
 export function HeaderImagePicker({
@@ -33,6 +35,7 @@ export function HeaderImagePicker({
   onStyleChange,
   onShapeChange,
   onCropChange,
+  layoutMode = 'standard',
 }: HeaderImagePickerProps) {
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -137,67 +140,102 @@ export function HeaderImagePicker({
           </div>
 
           {/* Style selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-600">Style</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => onStyleChange('banner')}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                  headerStyle === 'banner'
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                    : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
-                }`}
-              >
-                Banner
-              </button>
-              <button
-                onClick={() => onStyleChange('integrated')}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                  headerStyle === 'integrated'
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                    : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
-                }`}
-              >
-                Shape
-              </button>
-            </div>
-          </div>
-
-          {/* Shape selector (integrated only) */}
-          {headerStyle === 'integrated' && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-600">Shape</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onShapeChange('cloud')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                    headerImageShape === 'cloud'
-                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                      : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
-                  }`}
+          {layoutMode === 'question-by-question' ? (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Style</label>
+                <select
+                  value={headerStyle === 'banner' ? 'banner' : headerStyle === 'half-card' ? 'half-card' : 'integrated'}
+                  onChange={(e) => {
+                    const val = e.target.value as HeaderStyle;
+                    onStyleChange(val);
+                    if (val === 'integrated') {
+                      onShapeChange('circle');
+                    }
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  Cloud
-                </button>
-                <button
-                  onClick={() => onShapeChange('circle')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                    headerImageShape === 'circle'
-                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                      : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
-                  }`}
-                >
-                  Circle
-                </button>
+                  <option value="integrated">Circle</option>
+                  <option value="banner">Banner</option>
+                  <option value="half-card">Half Card</option>
+                </select>
               </div>
 
-              {/* Adjust crop button */}
-              <button
-                onClick={() => setShowCropDialog(true)}
-                className="w-full text-xs text-blue-600 hover:text-blue-800 py-1"
-              >
-                Adjust crop position
-              </button>
-            </div>
+              {/* Adjust crop for circle and half-card */}
+              {(headerStyle === 'integrated' || headerStyle === 'half-card') && (
+                <button
+                  onClick={() => setShowCropDialog(true)}
+                  className="w-full text-xs text-blue-600 hover:text-blue-800 py-1"
+                >
+                  Adjust crop position
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Style</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onStyleChange('banner')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                      headerStyle === 'banner'
+                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                    }`}
+                  >
+                    Banner
+                  </button>
+                  <button
+                    onClick={() => onStyleChange('integrated')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                      headerStyle === 'integrated'
+                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                    }`}
+                  >
+                    Shape
+                  </button>
+                </div>
+              </div>
+
+              {/* Shape selector (integrated only) */}
+              {headerStyle === 'integrated' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-600">Shape</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onShapeChange('cloud')}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                        headerImageShape === 'cloud'
+                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                          : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                      }`}
+                    >
+                      Cloud
+                    </button>
+                    <button
+                      onClick={() => onShapeChange('circle')}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                        headerImageShape === 'circle'
+                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                          : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                      }`}
+                    >
+                      Circle
+                    </button>
+                  </div>
+
+                  {/* Adjust crop button */}
+                  <button
+                    onClick={() => setShowCropDialog(true)}
+                    className="w-full text-xs text-blue-600 hover:text-blue-800 py-1"
+                  >
+                    Adjust crop position
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Change image */}
@@ -223,6 +261,7 @@ export function HeaderImagePicker({
         <HeaderCropDialog
           imageUrl={headerImageUrl}
           shape={headerImageShape}
+          headerStyle={headerStyle}
           crop={headerImageCrop || { x: 50, y: 50, scale: 1 }}
           onApply={(crop) => {
             onCropChange(crop);
@@ -239,12 +278,13 @@ export function HeaderImagePicker({
 interface HeaderCropDialogProps {
   imageUrl: string;
   shape: HeaderImageShape;
+  headerStyle?: HeaderStyle;
   crop: HeaderImageCrop;
   onApply: (crop: HeaderImageCrop) => void;
   onClose: () => void;
 }
 
-function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCropDialogProps) {
+function HeaderCropDialog({ imageUrl, shape, headerStyle, crop, onApply, onClose }: HeaderCropDialogProps) {
   const [localCrop, setLocalCrop] = useState<HeaderImageCrop>(crop);
   const [isDragging, setIsDragging] = useState(false);
   const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 600, h: 400 });
@@ -326,6 +366,18 @@ function HeaderCropDialog({ imageUrl, shape, crop, onApply, onClose }: HeaderCro
   const getShapeClipPath = () => {
     const cx = localCrop.x;
     const cy = localCrop.y;
+
+    // Half-card: rectangular region (right-half card shape)
+    if (headerStyle === 'half-card') {
+      const rectW = containerSize.w * 0.45; // 45% of container width
+      const rectH = containerSize.h * 0.8;  // 80% of container height
+      const left = cx - (rectW / containerSize.w) * 50;
+      const top = cy - (rectH / containerSize.h) * 50;
+      const right = cx + (rectW / containerSize.w) * 50;
+      const bottom = cy + (rectH / containerSize.h) * 50;
+      // Rounded rectangle via inset with border-radius
+      return `inset(${Math.max(0, top)}% ${Math.max(0, 100 - right)}% ${Math.max(0, 100 - bottom)}% ${Math.max(0, left)}% round 12px)`;
+    }
 
     if (shape === 'circle') {
       return `circle(${radiusPx}px at ${cx}% ${cy}%)`;

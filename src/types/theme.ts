@@ -12,7 +12,7 @@ export interface ThemeColors {
 
 export type BackgroundEffect = 'solid' | 'textured' | 'shapes' | 'gradient';
 
-export type HeaderStyle = 'banner' | 'integrated';
+export type HeaderStyle = 'banner' | 'integrated' | 'half-card';
 export type HeaderImageShape = 'cloud' | 'circle';
 
 export interface HeaderImageCrop {

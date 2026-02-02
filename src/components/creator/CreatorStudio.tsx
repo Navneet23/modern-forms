@@ -29,16 +29,8 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
   // Current layout being edited
   const [activeLayout, setActiveLayout] = useState<LayoutMode>('standard');
 
-  // Clear header image when switching to Q by Q
   const handleLayoutChange = useCallback((layout: LayoutMode) => {
     setActiveLayout(layout);
-    if (layout === 'question-by-question') {
-      setCurrentTheme((prev) => ({
-        ...prev,
-        headerImageUrl: undefined,
-        headerStyle: undefined,
-      }));
-    }
   }, []);
 
   // Preview mode
@@ -353,19 +345,18 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               </select>
             </div>
 
-            {/* Header Image Picker (Standard layout only) */}
-            {activeLayout === 'standard' && (
-              <HeaderImagePicker
-                headerImageUrl={currentTheme.headerImageUrl}
-                headerStyle={currentTheme.headerStyle}
-                headerImageShape={currentTheme.headerImageShape}
-                headerImageCrop={currentTheme.headerImageCrop}
-                onImageChange={handleHeaderImageChange}
-                onStyleChange={handleHeaderStyleChange}
-                onShapeChange={handleHeaderShapeChange}
-                onCropChange={handleHeaderCropChange}
-              />
-            )}
+            {/* Header Image Picker */}
+            <HeaderImagePicker
+              headerImageUrl={currentTheme.headerImageUrl}
+              headerStyle={currentTheme.headerStyle}
+              headerImageShape={currentTheme.headerImageShape}
+              headerImageCrop={currentTheme.headerImageCrop}
+              onImageChange={handleHeaderImageChange}
+              onStyleChange={handleHeaderStyleChange}
+              onShapeChange={handleHeaderShapeChange}
+              onCropChange={handleHeaderCropChange}
+              layoutMode={activeLayout}
+            />
           </div>
         </aside>
 
@@ -430,6 +421,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   form={form}
                   theme={currentTheme}
                   layout={activeLayout}
+                  previewMode={previewMode}
                 />
               </div>
             </div>
@@ -445,9 +437,10 @@ interface PreviewContentProps {
   form: ParsedForm;
   theme: ThemeConfig;
   layout: LayoutMode;
+  previewMode: PreviewMode;
 }
 
-function PreviewContent({ form, theme, layout }: PreviewContentProps) {
+function PreviewContent({ form, theme, layout, previewMode }: PreviewContentProps) {
   const style = {
     '--theme-primary': theme.colors.primary,
     '--theme-secondary': theme.colors.secondary,
@@ -473,6 +466,7 @@ function PreviewContent({ form, theme, layout }: PreviewContentProps) {
           form={form}
           theme={theme}
           isPreview
+          previewMode={previewMode}
         />
       )}
     </div>
