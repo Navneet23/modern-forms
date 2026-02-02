@@ -40,6 +40,7 @@ Central theme object containing:
 - `headerImageCrop?` — `{ x, y, scale }` focal point + zoom
 - `backgroundImageUrl?` — background image source
 - `backgroundEffect?` — `'solid'` | `'textured'` | `'shapes'` | `'gradient'`
+- `welcomeTitleLight?` — manual override to force white text on Q by Q welcome screen
 
 ### `LayoutMode` (`src/types/form.ts`)
 

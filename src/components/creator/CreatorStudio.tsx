@@ -31,11 +31,19 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   const handleLayoutChange = useCallback((layout: LayoutMode) => {
     setActiveLayout(layout);
-    // Force circle shape when switching to Q by Q with integrated header (cloud not supported in Q by Q)
     if (layout === 'question-by-question') {
+      // Force circle shape when switching to Q by Q with integrated header (cloud not supported)
       setCurrentTheme((prev) => {
         if (prev.headerStyle === 'integrated' && prev.headerImageShape !== 'circle') {
           return { ...prev, headerImageShape: 'circle' };
+        }
+        return prev;
+      });
+    } else {
+      // Clear Q by Q-only state when switching to standard
+      setCurrentTheme((prev) => {
+        if (prev.welcomeTitleLight) {
+          return { ...prev, welcomeTitleLight: undefined };
         }
         return prev;
       });
@@ -135,11 +143,13 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
   }, [setCurrentTheme]);
 
   const handleHeaderShapeChange = useCallback((shape: HeaderImageShape) => {
+    // Cloud shape not supported in Q by Q — force circle
+    const safeShape = activeLayout === 'question-by-question' && shape === 'cloud' ? 'circle' : shape;
     setCurrentTheme((prev) => ({
       ...prev,
-      headerImageShape: shape,
+      headerImageShape: safeShape,
     }));
-  }, [setCurrentTheme]);
+  }, [setCurrentTheme, activeLayout]);
 
   const handleHeaderCropChange = useCallback((crop: HeaderImageCrop) => {
     setCurrentTheme((prev) => ({
@@ -367,7 +377,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                 <h3 className="text-sm font-semibold text-gray-700">Welcome Title Color</h3>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentTheme((prev) => ({ ...prev, welcomeTitleLight: false }))}
+                    onClick={() => setCurrentTheme((prev) => ({ ...prev, welcomeTitleLight: undefined }))}
                     className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
                       !currentTheme.welcomeTitleLight
                         ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'

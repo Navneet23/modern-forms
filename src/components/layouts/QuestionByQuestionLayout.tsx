@@ -88,9 +88,10 @@ export function QuestionByQuestionLayout({
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
   // Determine contrasting text color based on background luminance.
-  // Manual override: welcomeTitleLight forces white text for dark backgrounds.
+  // Priority: manual override → background image (default white) → luminance calculation.
   const getWelcomeTextColor = () => {
     if (theme.welcomeTitleLight) return '#FFFFFF';
+    if (hasBackgroundImage) return '#FFFFFF';
     const hex = theme.colors.background.replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16) / 255;
     const g = parseInt(hex.substring(2, 4), 16) / 255;
@@ -720,7 +721,7 @@ export function QuestionByQuestionLayout({
         <div className="max-w-xl w-full">
           <h1
             className="text-5xl sm:text-6xl font-bold text-center mb-6"
-            style={{ color: welcomeTextColor }}
+            style={{ color: hasBackgroundImage ? '#FFFFFF' : theme.colors.primary }}
           >
             {form.title}
           </h1>
