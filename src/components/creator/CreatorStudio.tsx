@@ -31,7 +31,16 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   const handleLayoutChange = useCallback((layout: LayoutMode) => {
     setActiveLayout(layout);
-  }, []);
+    // Force circle shape when switching to Q by Q with integrated header (cloud not supported in Q by Q)
+    if (layout === 'question-by-question') {
+      setCurrentTheme((prev) => {
+        if (prev.headerStyle === 'integrated' && prev.headerImageShape !== 'circle') {
+          return { ...prev, headerImageShape: 'circle' };
+        }
+        return prev;
+      });
+    }
+  }, [setCurrentTheme]);
 
   // Preview mode
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
@@ -103,13 +112,20 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // Handle header image changes
   const handleHeaderImageChange = useCallback((url: string | undefined) => {
-    setCurrentTheme((prev) => ({
-      ...prev,
-      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
-      headerImageUrl: url,
-      headerStyle: url ? (prev.headerStyle || 'banner') : undefined,
-    }));
-  }, [setCurrentTheme]);
+    const isQbyQ = activeLayout === 'question-by-question';
+    const defaultStyle = isQbyQ ? 'integrated' : 'banner';
+    setCurrentTheme((prev) => {
+      const style = url ? (prev.headerStyle || defaultStyle) : undefined;
+      return {
+        ...prev,
+        id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+        headerImageUrl: url,
+        headerStyle: style,
+        // Force circle shape for Q by Q integrated style (cloud not supported)
+        ...(isQbyQ && style === 'integrated' ? { headerImageShape: 'circle' as const } : {}),
+      };
+    });
+  }, [setCurrentTheme, activeLayout]);
 
   const handleHeaderStyleChange = useCallback((style: HeaderStyle) => {
     setCurrentTheme((prev) => ({
@@ -344,6 +360,38 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                 </optgroup>
               </select>
             </div>
+
+            {/* Title Text Color Toggle (Q by Q only) */}
+            {activeLayout === 'question-by-question' && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-700">Welcome Title Color</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentTheme((prev) => ({ ...prev, welcomeTitleLight: false }))}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                      !currentTheme.welcomeTitleLight
+                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                    }`}
+                  >
+                    Auto
+                  </button>
+                  <button
+                    onClick={() => setCurrentTheme((prev) => ({ ...prev, welcomeTitleLight: true }))}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                      currentTheme.welcomeTitleLight
+                        ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+                        : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+                    }`}
+                  >
+                    Light
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Use Light if the title is hard to read on dark backgrounds.
+                </p>
+              </div>
+            )}
 
             {/* Header Image Picker */}
             <HeaderImagePicker

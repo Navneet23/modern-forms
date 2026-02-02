@@ -46,6 +46,8 @@ export interface ShareableFormConfig {
     hsh?: 'cl' | 'ci';
     // Header image crop
     hc?: { x: number; y: number; s: number };
+    // Welcome title light override (Q by Q): 1 = white text
+    wt?: 1;
   };
   // Created timestamp (for 7-day expiry check)
   ts: number;
@@ -100,6 +102,7 @@ export function encodeFormConfig(
       hs: theme.headerStyle === 'banner' ? 'b' : theme.headerStyle === 'integrated' ? 'i' : theme.headerStyle === 'half-card' ? 'h' : undefined,
       hsh: theme.headerImageShape === 'cloud' ? 'cl' : theme.headerImageShape === 'circle' ? 'ci' : undefined,
       hc: theme.headerImageCrop ? { x: theme.headerImageCrop.x, y: theme.headerImageCrop.y, s: theme.headerImageCrop.scale } : undefined,
+      wt: theme.welcomeTitleLight ? 1 : undefined,
     },
     ts: Date.now(),
   };
@@ -112,6 +115,7 @@ export function encodeFormConfig(
   if (!config.t.hs) delete config.t.hs;
   if (!config.t.hsh) delete config.t.hsh;
   if (!config.t.hc) delete config.t.hc;
+  if (!config.t.wt) delete config.t.wt;
 
   const jsonString = JSON.stringify(config);
   return compressToEncodedURIComponent(jsonString);
@@ -185,6 +189,7 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
     headerImageCrop: t.hc ? { x: t.hc.x, y: t.hc.y, scale: t.hc.s } : undefined,
     backgroundImageUrl: t.bi,
     backgroundEffect: t.be,
+    welcomeTitleLight: t.wt === 1 ? true : undefined,
   };
 }
 

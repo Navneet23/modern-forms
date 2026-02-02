@@ -87,9 +87,10 @@ export function QuestionByQuestionLayout({
   // Use absolute positioning in preview mode to stay within container
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
-  // Determine if background is dark to choose contrasting text color
+  // Determine contrasting text color based on background luminance.
+  // Manual override: welcomeTitleLight forces white text for dark backgrounds.
   const getWelcomeTextColor = () => {
-    if (hasBackgroundImage) return '#FFFFFF';
+    if (theme.welcomeTitleLight) return '#FFFFFF';
     const hex = theme.colors.background.replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16) / 255;
     const g = parseInt(hex.substring(2, 4), 16) / 255;
