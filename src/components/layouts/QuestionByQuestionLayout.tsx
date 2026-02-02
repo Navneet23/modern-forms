@@ -721,7 +721,7 @@ export function QuestionByQuestionLayout({
         <div className="max-w-xl w-full">
           <h1
             className="text-5xl sm:text-6xl font-bold text-center mb-6"
-            style={{ color: hasBackgroundImage ? '#FFFFFF' : theme.colors.primary }}
+            style={{ color: welcomeTextColor }}
           >
             {form.title}
           </h1>
