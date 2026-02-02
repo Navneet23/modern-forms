@@ -36,6 +36,16 @@ export interface ShareableFormConfig {
     bi?: string;
     // Background effect
     be?: BackgroundEffect;
+    // Font family
+    ff?: string;
+    // Header image URL
+    hi?: string;
+    // Header style: 'b' = banner, 'i' = integrated
+    hs?: 'b' | 'i';
+    // Header image shape: 'cl' = cloud, 'ci' = circle
+    hsh?: 'cl' | 'ci';
+    // Header image crop
+    hc?: { x: number; y: number; s: number };
   };
   // Created timestamp (for 7-day expiry check)
   ts: number;
@@ -62,6 +72,10 @@ export function encodeFormConfig(
     ? theme.backgroundImageUrl
     : undefined;
 
+  const headerImageUrl_ = theme.headerImageUrl && !isBase64DataUrl(theme.headerImageUrl)
+    ? theme.headerImageUrl
+    : undefined;
+
   const config: ShareableFormConfig = {
     u: googleFormUrl,
     l: layoutMode === 'standard' ? 's' : 'q',
@@ -81,6 +95,11 @@ export function encodeFormConfig(
       r: theme.borderRadius,
       bi: backgroundImageUrl,
       be: theme.backgroundEffect,
+      ff: theme.fontFamily,
+      hi: headerImageUrl_,
+      hs: theme.headerStyle === 'banner' ? 'b' : theme.headerStyle === 'integrated' ? 'i' : undefined,
+      hsh: theme.headerImageShape === 'cloud' ? 'cl' : theme.headerImageShape === 'circle' ? 'ci' : undefined,
+      hc: theme.headerImageCrop ? { x: theme.headerImageCrop.x, y: theme.headerImageCrop.y, s: theme.headerImageCrop.scale } : undefined,
     },
     ts: Date.now(),
   };
@@ -88,6 +107,11 @@ export function encodeFormConfig(
   // Remove undefined values to minimize size
   if (!config.t.bi) delete config.t.bi;
   if (!config.t.be) delete config.t.be;
+  if (!config.t.ff) delete config.t.ff;
+  if (!config.t.hi) delete config.t.hi;
+  if (!config.t.hs) delete config.t.hs;
+  if (!config.t.hsh) delete config.t.hsh;
+  if (!config.t.hc) delete config.t.hc;
 
   const jsonString = JSON.stringify(config);
   return compressToEncodedURIComponent(jsonString);
@@ -154,7 +178,11 @@ export function shareableToThemeConfig(shareable: ShareableFormConfig): ThemeCon
       success: '#2E7D32',
     },
     borderRadius: t.r as ThemeConfig['borderRadius'],
-    fontFamily: 'Inter, system-ui, sans-serif',
+    fontFamily: t.ff || "'Inter', system-ui, sans-serif",
+    headerImageUrl: t.hi,
+    headerStyle: t.hs === 'b' ? 'banner' : t.hs === 'i' ? 'integrated' : undefined,
+    headerImageShape: t.hsh === 'cl' ? 'cloud' : t.hsh === 'ci' ? 'circle' : undefined,
+    headerImageCrop: t.hc ? { x: t.hc.x, y: t.hc.y, scale: t.hc.s } : undefined,
     backgroundImageUrl: t.bi,
     backgroundEffect: t.be,
   };

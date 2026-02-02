@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ParsedForm, FormResponse } from '../../types/form';
 import type { ThemeConfig } from '../../types/theme';
+import { HEADER_SHAPE_CLIP_PATHS } from '../creator/HeaderImagePicker';
 import { defaultTheme } from '../../data/themes';
 import { QuestionRenderer } from '../questions';
 import { submitFormResponse } from '../../utils/formParser';
@@ -25,10 +26,33 @@ export function StandardLayout({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isNarrow, setIsNarrow] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setIsNarrow(entry.contentRect.width < 500);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Use theme header image if available
   const displayHeaderImage = headerImageUrl || theme.headerImageUrl;
   const hasBackgroundImage = !!theme.backgroundImageUrl;
+
+  // Track natural aspect ratio of the header image for correct crop rendering
+  const [headerImgAspect, setHeaderImgAspect] = useState(1);
+  useEffect(() => {
+    if (!displayHeaderImage) return;
+    const img = new Image();
+    img.onload = () => setHeaderImgAspect(img.naturalWidth / img.naturalHeight);
+    img.src = displayHeaderImage;
+  }, [displayHeaderImage]);
 
   const handleChange = (questionId: string, value: string | string[]) => {
     setResponses((prev) => ({ ...prev, [questionId]: value }));
@@ -97,6 +121,64 @@ export function StandardLayout({
   // Use absolute positioning in preview mode to stay within container
   const positionClass = isPreview ? 'absolute' : 'fixed';
 
+  // Blend primary (45%) and background (55%) for the title card tint
+  const blendColors = (hex1: string, hex2: string, weight: number): string => {
+    const h1 = hex1.replace('#', '');
+    const h2 = hex2.replace('#', '');
+    const r = Math.round(parseInt(h1.substring(0, 2), 16) * weight + parseInt(h2.substring(0, 2), 16) * (1 - weight));
+    const g = Math.round(parseInt(h1.substring(2, 4), 16) * weight + parseInt(h2.substring(2, 4), 16) * (1 - weight));
+    const b = Math.round(parseInt(h1.substring(4, 6), 16) * weight + parseInt(h2.substring(4, 6), 16) * (1 - weight));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
+
+  const titleCardBg = blendColors(theme.colors.primary, theme.colors.background, 0.45);
+
+  // Determine contrast text color for the title card
+  const getTitleTextColor = (bgHex: string): string => {
+    const hex = bgHex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    return luminance > 0.4 ? theme.colors.text : '#FFFFFF';
+  };
+
+  const titleTextColor = getTitleTextColor(titleCardBg);
+
+  // Compute absolute-positioning styles for the integrated header image so the
+  // crop dialog's coordinate system maps 1:1 onto the rendered form.
+  const getIntegratedImageStyle = (): React.CSSProperties => {
+    const crop = theme.headerImageCrop;
+    if (!crop) return { objectFit: 'cover' as const, objectPosition: '50% 50%', width: '100%', height: '100%' };
+
+    const coverW = Math.max(1, headerImgAspect);   // image width relative to square container
+    const coverH = Math.max(1, 1 / headerImgAspect); // image height relative to square container
+
+    // Coverage scale: enlarge the image beyond cover-size so it fills the full
+    // container (0%-100%) regardless of how off-center the crop point is.
+    const safeX = Math.max(1, Math.min(99, crop.x));
+    const safeY = Math.max(1, Math.min(99, crop.y));
+    const cs = Math.max(
+      1,
+      50 / (safeX * coverW),
+      50 / ((100 - safeX) * coverW),
+      50 / (safeY * coverH),
+      50 / ((100 - safeY) * coverH)
+    );
+
+    return {
+      position: 'absolute' as const,
+      maxWidth: 'none',
+      width: `${coverW * cs * 100}%`,
+      height: `${coverH * cs * 100}%`,
+      left: `${50 - crop.x * coverW * cs}%`,
+      top: `${50 - crop.y * coverH * cs}%`,
+      transform: `scale(${crop.scale})`,
+      transformOrigin: `${crop.x}% ${crop.y}%`,
+    };
+  };
+
   // Background layers component - handles both image and effect backgrounds
   const BackgroundLayers = () => {
     if (hasBackgroundImage) {
@@ -160,6 +242,7 @@ export function StandardLayout({
 
   return (
     <div
+      ref={containerRef}
       className="min-h-screen relative"
       style={{
         backgroundColor: hasBackgroundImage ? 'transparent' : theme.colors.background,
@@ -172,40 +255,161 @@ export function StandardLayout({
         Skip to main content
       </a>
 
+      {/* Banner style: full-width image above the constrained content */}
+      {displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle) && (
+        <div className="relative z-10">
+          <div className="overflow-hidden shadow-md">
+            <img
+              src={displayHeaderImage}
+              alt=""
+              className="w-full object-cover object-center"
+              style={{ aspectRatio: isNarrow ? '16 / 5' : '16 / 2.5' }}
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Content layer */}
-      <main id="main-content" className="max-w-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10">
+      <main
+        id="main-content"
+        className={`max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 ${
+          displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle)
+            ? 'pt-0 pb-8'
+            : 'py-8'
+        }`}
+      >
         {/* Header */}
         <header className="mb-8">
-          {displayHeaderImage && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-md">
-              <img
-                src={displayHeaderImage}
-                alt=""
-                className="w-full h-48 object-cover"
-                aria-hidden="true"
-              />
+          {/* Banner style: title card overlapping the banner image */}
+          {displayHeaderImage && (theme.headerStyle === 'banner' || !theme.headerStyle) && (
+            <div
+              className="rounded-2xl shadow-md p-6 sm:p-8 -mt-12 relative z-10"
+              style={{ backgroundColor: titleCardBg }}
+            >
+              <h1
+                className="text-3xl sm:text-4xl font-bold mb-2"
+                style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+              >
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-base sm:text-lg"
+                  style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                >
+                  {form.description}
+                </p>
+              )}
             </div>
           )}
 
-          <div
-            className="rounded-2xl shadow-md p-6 sm:p-8"
-            style={{
-              backgroundColor: theme.colors.surface,
-              borderTop: `4px solid ${theme.colors.primary}`,
-            }}
-          >
-            <h1
-              className="text-2xl sm:text-3xl font-bold mb-2"
-              style={{ color: theme.colors.text }}
+          {/* Integrated style: image above card when narrow, side-by-side when wide */}
+          {displayHeaderImage && theme.headerStyle === 'integrated' && isNarrow && (
+            <div className="flex flex-col items-center">
+              {/* Shaped image floating above */}
+              <div
+                className="w-40 h-40 flex-shrink-0 relative z-10"
+                style={{
+                  overflow: 'hidden',
+                  clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'circle'],
+                }}
+              >
+                <img
+                  src={displayHeaderImage}
+                  alt=""
+                  style={getIntegratedImageStyle()}
+                  aria-hidden="true"
+                />
+              </div>
+              {/* Title card overlapping the image */}
+              <div
+                className="rounded-2xl shadow-md p-6 w-full -mt-8"
+                style={{ backgroundColor: titleCardBg }}
+              >
+                <h1
+                  className="text-3xl font-bold mb-2 pt-4"
+                  style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                >
+                  {form.title}
+                </h1>
+                {form.description && (
+                  <p
+                    className="text-base"
+                    style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                  >
+                    {form.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {displayHeaderImage && theme.headerStyle === 'integrated' && !isNarrow && (
+            <div
+              className="rounded-2xl shadow-md overflow-hidden"
+              style={{ backgroundColor: titleCardBg }}
             >
-              {form.title}
-            </h1>
-            {form.description && (
-              <p className="text-base sm:text-lg" style={{ color: theme.colors.textSecondary }}>
-                {form.description}
-              </p>
-            )}
-          </div>
+              {/* Wide: text left, shaped image right */}
+              <div className="flex items-center p-6 sm:p-8 gap-4">
+                <div className="flex-1 min-w-0">
+                  <h1
+                    className="text-4xl font-bold mb-2"
+                    style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+                  >
+                    {form.title}
+                  </h1>
+                  {form.description && (
+                    <p
+                      className="text-lg"
+                      style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                    >
+                      {form.description}
+                    </p>
+                  )}
+                </div>
+                <div
+                  className="flex-shrink-0 relative"
+                  style={{
+                    width: '40%',
+                    aspectRatio: '1',
+                    overflow: 'hidden',
+                    clipPath: HEADER_SHAPE_CLIP_PATHS[theme.headerImageShape || 'circle'],
+                  }}
+                >
+                  <img
+                    src={displayHeaderImage}
+                    alt=""
+                    style={getIntegratedImageStyle()}
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* No header image: default title card */}
+          {!displayHeaderImage && (
+            <div
+              className="rounded-2xl shadow-md p-6 sm:p-8"
+              style={{ backgroundColor: titleCardBg }}
+            >
+              <h1
+                className="text-3xl sm:text-4xl font-bold mb-2"
+                style={{ color: titleTextColor, fontFamily: theme.fontFamily }}
+              >
+                {form.title}
+              </h1>
+              {form.description && (
+                <p
+                  className="text-base sm:text-lg"
+                  style={{ color: titleTextColor, opacity: 0.85, fontFamily: theme.fontFamily }}
+                >
+                  {form.description}
+                </p>
+              )}
+            </div>
+          )}
         </header>
 
         {/* Form */}

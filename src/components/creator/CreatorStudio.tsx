@@ -1,11 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ParsedForm, LayoutMode } from '../../types/form';
-import type { ThemeConfig, ThemeColors, BackgroundEffect } from '../../types/theme';
+import type { ThemeConfig, ThemeColors, BackgroundEffect, HeaderStyle, HeaderImageShape, HeaderImageCrop } from '../../types/theme';
 import { defaultTheme } from '../../data/themes';
 import { ThemeSelector } from './ThemeSelector';
 import { ColorCustomizer } from './ColorCustomizer';
 import { BackgroundImagePicker } from './BackgroundImagePicker';
 import { BackgroundEffectPicker } from './BackgroundEffectPicker';
+import { HeaderImagePicker } from './HeaderImagePicker';
 import { createShareableUrl, isBase64DataUrl } from '../../utils/urlSharing';
 import { StandardLayout } from '../layouts/StandardLayout';
 import { QuestionByQuestionLayout } from '../layouts/QuestionByQuestionLayout';
@@ -28,6 +29,18 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
   // Current layout being edited
   const [activeLayout, setActiveLayout] = useState<LayoutMode>('standard');
 
+  // Clear header image when switching to Q by Q
+  const handleLayoutChange = useCallback((layout: LayoutMode) => {
+    setActiveLayout(layout);
+    if (layout === 'question-by-question') {
+      setCurrentTheme((prev) => ({
+        ...prev,
+        headerImageUrl: undefined,
+        headerStyle: undefined,
+      }));
+    }
+  }, []);
+
   // Preview mode
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
 
@@ -37,6 +50,21 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // Ref for the preview scroll container
   const previewScrollRef = useRef<HTMLDivElement>(null);
+
+  // Dynamically load Google Font when font family changes
+  useEffect(() => {
+    const fontName = currentTheme.fontFamily.split(',')[0].replace(/'/g, '').trim();
+    if (!fontName || fontName === 'system-ui') return;
+
+    const linkId = `google-font-${fontName.replace(/\s+/g, '-')}`;
+    if (document.getElementById(linkId)) return;
+
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+    document.head.appendChild(link);
+  }, [currentTheme.fontFamily]);
 
   // Scroll preview based on layout type
   useEffect(() => {
@@ -81,12 +109,52 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
     }));
   }, [setCurrentTheme]);
 
+  // Handle header image changes
+  const handleHeaderImageChange = useCallback((url: string | undefined) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      headerImageUrl: url,
+      headerStyle: url ? (prev.headerStyle || 'banner') : undefined,
+    }));
+  }, [setCurrentTheme]);
+
+  const handleHeaderStyleChange = useCallback((style: HeaderStyle) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      headerStyle: style,
+    }));
+  }, [setCurrentTheme]);
+
+  const handleHeaderShapeChange = useCallback((shape: HeaderImageShape) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      headerImageShape: shape,
+    }));
+  }, [setCurrentTheme]);
+
+  const handleHeaderCropChange = useCallback((crop: HeaderImageCrop) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      headerImageCrop: crop,
+    }));
+  }, [setCurrentTheme]);
+
   // Handle background image change
   const handleBackgroundImageChange = useCallback((url: string | undefined) => {
     setCurrentTheme((prev) => ({
       ...prev,
       id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
       backgroundImageUrl: url,
+    }));
+  }, [setCurrentTheme]);
+
+  // Handle font family change
+  const handleFontFamilyChange = useCallback((fontFamily: string) => {
+    setCurrentTheme((prev) => ({
+      ...prev,
+      id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
+      fontFamily,
     }));
   }, [setCurrentTheme]);
 
@@ -101,8 +169,9 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
 
   // Handle create & copy - uses URL-based sharing (no localStorage)
   const handleCreateAndCopy = useCallback(() => {
-    // Check if the background image is a base64 data URL (AI-generated or uploaded)
-    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl);
+    // Check if any image is a base64 data URL (uploaded without successful blob hosting)
+    const hasBase64Image = isBase64DataUrl(currentTheme.backgroundImageUrl)
+      || isBase64DataUrl(currentTheme.headerImageUrl);
 
     const url = createShareableUrl(originalFormUrl, activeLayout, currentTheme);
 
@@ -170,8 +239,8 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <div className="text-sm">
-            <p className="font-medium">Background image not included</p>
-            <p className="mt-1 text-amber-700">AI-generated and uploaded images cannot be shared via URL. Recipients will see the background effect instead.</p>
+            <p className="font-medium">Uploaded images not included</p>
+            <p className="mt-1 text-amber-700">Uploaded images could not be hosted and won't appear in shared links. Use gallery images or AI-generated images instead.</p>
           </div>
         </div>
       )}
@@ -185,7 +254,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               <h3 className="text-sm font-semibold text-gray-700">Layout</h3>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setActiveLayout('standard')}
+                  onClick={() => handleLayoutChange('standard')}
                   className={`
                     flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all
                     ${activeLayout === 'standard'
@@ -197,7 +266,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   Standard
                 </button>
                 <button
-                  onClick={() => setActiveLayout('question-by-question')}
+                  onClick={() => handleLayoutChange('question-by-question')}
                   className={`
                     flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all
                     ${activeLayout === 'question-by-question'
@@ -241,6 +310,62 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               secondaryColor={currentTheme.colors.secondary}
               disabled={!!currentTheme.backgroundImageUrl}
             />
+
+            {/* Font Picker */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700">Title Font</h3>
+              <select
+                value={currentTheme.fontFamily}
+                onChange={(e) => handleFontFamilyChange(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{ fontFamily: currentTheme.fontFamily }}
+              >
+                <optgroup label="Sans Serif">
+                  <option value="'Inter', system-ui, sans-serif">Inter</option>
+                  <option value="'Poppins', system-ui, sans-serif">Poppins</option>
+                  <option value="'Roboto', system-ui, sans-serif">Roboto</option>
+                  <option value="'Montserrat', system-ui, sans-serif">Montserrat</option>
+                  <option value="'Raleway', system-ui, sans-serif">Raleway</option>
+                  <option value="'Nunito', system-ui, sans-serif">Nunito</option>
+                  <option value="'Source Sans 3', system-ui, sans-serif">Source Sans 3</option>
+                </optgroup>
+                <optgroup label="Serif">
+                  <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
+                  <option value="'Lora', Georgia, serif">Lora</option>
+                  <option value="'Merriweather', Georgia, serif">Merriweather</option>
+                  <option value="'Libre Baskerville', Georgia, serif">Libre Baskerville</option>
+                </optgroup>
+                <optgroup label="Display">
+                  <option value="'Abril Fatface', Georgia, serif">Abril Fatface</option>
+                  <option value="'Bebas Neue', system-ui, sans-serif">Bebas Neue</option>
+                  <option value="'Oswald', system-ui, sans-serif">Oswald</option>
+                  <option value="'Righteous', system-ui, sans-serif">Righteous</option>
+                  <option value="'Fredoka', system-ui, sans-serif">Fredoka</option>
+                </optgroup>
+                <optgroup label="Handwritten">
+                  <option value="'Dancing Script', cursive">Dancing Script</option>
+                  <option value="'Caveat', cursive">Caveat</option>
+                  <option value="'Pacifico', cursive">Pacifico</option>
+                  <option value="'Sacramento', cursive">Sacramento</option>
+                  <option value="'Great Vibes', cursive">Great Vibes</option>
+                  <option value="'Satisfy', cursive">Satisfy</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {/* Header Image Picker (Standard layout only) */}
+            {activeLayout === 'standard' && (
+              <HeaderImagePicker
+                headerImageUrl={currentTheme.headerImageUrl}
+                headerStyle={currentTheme.headerStyle}
+                headerImageShape={currentTheme.headerImageShape}
+                headerImageCrop={currentTheme.headerImageCrop}
+                onImageChange={handleHeaderImageChange}
+                onStyleChange={handleHeaderStyleChange}
+                onShapeChange={handleHeaderShapeChange}
+                onCropChange={handleHeaderCropChange}
+              />
+            )}
           </div>
         </aside>
 
