@@ -164,6 +164,7 @@ export function BackgroundImagePicker({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: dataUrl }),
         });
+        if (!response.ok) throw new Error('Upload failed');
         const data = await response.json();
         setUploadedImage(data.url);
         onImageSelect(data.url);

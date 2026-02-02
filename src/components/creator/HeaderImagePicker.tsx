@@ -59,6 +59,7 @@ export function HeaderImagePicker({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: base64Url }),
         });
+        if (!response.ok) throw new Error('Upload failed');
         const data = await response.json();
         onImageChange(data.url);
       } catch {
