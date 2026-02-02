@@ -27,7 +27,7 @@ interface HeaderImagePickerProps {
 export function HeaderImagePicker({
   headerImageUrl,
   headerStyle = 'banner',
-  headerImageShape = 'cloud',
+  headerImageShape = 'circle',
   headerImageCrop,
   onImageChange,
   onStyleChange,

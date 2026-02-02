@@ -29,6 +29,18 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
   // Current layout being edited
   const [activeLayout, setActiveLayout] = useState<LayoutMode>('standard');
 
+  // Clear header image when switching to Q by Q
+  const handleLayoutChange = useCallback((layout: LayoutMode) => {
+    setActiveLayout(layout);
+    if (layout === 'question-by-question') {
+      setCurrentTheme((prev) => ({
+        ...prev,
+        headerImageUrl: undefined,
+        headerStyle: undefined,
+      }));
+    }
+  }, []);
+
   // Preview mode
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
 
@@ -242,7 +254,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
               <h3 className="text-sm font-semibold text-gray-700">Layout</h3>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setActiveLayout('standard')}
+                  onClick={() => handleLayoutChange('standard')}
                   className={`
                     flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all
                     ${activeLayout === 'standard'
@@ -254,7 +266,7 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                   Standard
                 </button>
                 <button
-                  onClick={() => setActiveLayout('question-by-question')}
+                  onClick={() => handleLayoutChange('question-by-question')}
                   className={`
                     flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all
                     ${activeLayout === 'question-by-question'
@@ -267,18 +279,6 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                 </button>
               </div>
             </div>
-
-            {/* Header Image Picker */}
-            <HeaderImagePicker
-              headerImageUrl={currentTheme.headerImageUrl}
-              headerStyle={currentTheme.headerStyle}
-              headerImageShape={currentTheme.headerImageShape}
-              headerImageCrop={currentTheme.headerImageCrop}
-              onImageChange={handleHeaderImageChange}
-              onStyleChange={handleHeaderStyleChange}
-              onShapeChange={handleHeaderShapeChange}
-              onCropChange={handleHeaderCropChange}
-            />
 
             {/* Theme Selector */}
             <ThemeSelector
@@ -352,6 +352,20 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
                 </optgroup>
               </select>
             </div>
+
+            {/* Header Image Picker (Standard layout only) */}
+            {activeLayout === 'standard' && (
+              <HeaderImagePicker
+                headerImageUrl={currentTheme.headerImageUrl}
+                headerStyle={currentTheme.headerStyle}
+                headerImageShape={currentTheme.headerImageShape}
+                headerImageCrop={currentTheme.headerImageCrop}
+                onImageChange={handleHeaderImageChange}
+                onStyleChange={handleHeaderStyleChange}
+                onShapeChange={handleHeaderShapeChange}
+                onCropChange={handleHeaderCropChange}
+              />
+            )}
           </div>
         </aside>
 
