@@ -121,15 +121,17 @@ export function CreatorStudio({ form, originalFormUrl, onBack }: CreatorStudioPr
   // Handle header image changes
   const handleHeaderImageChange = useCallback((url: string | undefined) => {
     const isQbyQ = activeLayout === 'question-by-question';
-    const defaultStyle = isQbyQ ? 'integrated' : 'banner';
     setCurrentTheme((prev) => {
+      const defaultStyle = 'integrated';
       const style = url ? (prev.headerStyle || defaultStyle) : undefined;
       return {
         ...prev,
         id: prev.id.includes('-custom') ? prev.id : `${prev.id}-custom`,
         headerImageUrl: url,
         headerStyle: style,
-        // Force circle shape for Q by Q integrated style (cloud not supported)
+        // Default to circle shape for integrated style
+        ...(style === 'integrated' && !prev.headerImageShape ? { headerImageShape: 'circle' as const } : {}),
+        // Force circle shape in Q by Q (cloud not supported)
         ...(isQbyQ && style === 'integrated' ? { headerImageShape: 'circle' as const } : {}),
       };
     });
