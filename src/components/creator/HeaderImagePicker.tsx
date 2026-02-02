@@ -157,7 +157,7 @@ export function HeaderImagePicker({
                     : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
                 }`}
               >
-                Integrated
+                Shape
               </button>
             </div>
           </div>

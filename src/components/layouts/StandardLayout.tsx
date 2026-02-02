@@ -262,8 +262,8 @@ export function StandardLayout({
             <img
               src={displayHeaderImage}
               alt=""
-              className="w-full object-cover"
-              style={{ aspectRatio: '16 / 5' }}
+              className="w-full object-cover object-center"
+              style={{ aspectRatio: isNarrow ? '16 / 5' : '16 / 2.5' }}
               aria-hidden="true"
             />
           </div>
